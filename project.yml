@@ -1,0 +1,42 @@
+name: Sela
+
+options:
+  bundleIdPrefix: com.mujabaralno
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+packages:
+  DynamicNotchKit:
+    url: https://github.com/MrKai77/DynamicNotchKit
+    from: 1.1.0
+
+targets:
+  Sela:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sela
+    dependencies:
+      - package: DynamicNotchKit
+    info:
+      path: Sela/Info.plist
+      properties:
+        CFBundleDisplayName: Sela
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.utilities
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        NSHumanReadableCopyright: ""
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mujabaralno.sela
+        PRODUCT_NAME: Sela
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 1
+        SWIFT_VERSION: 5.0
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_HARDENED_RUNTIME: YES
+        COMBINE_HIDPI_IMAGES: YES

@@ -1,0 +1,9 @@
+.commandcode/
+build/
+issue.md
+
+.DS_Store
+DerivedData/
+xcuserdata/
+*.xcuserstate
+.swiftpm/
