@@ -35,9 +35,9 @@ dengan `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` di depannya.
 - **Mulai** menjalankan sesi, **Jeda** menghentikan hitung mundur sementara,
   **Reset** mengembalikan waktu ke durasi awal sesi yang dipilih.
 - Panel menampilkan jenis sesi, sisa waktu, dan status (Siap, Berjalan, Dijeda, Selesai).
-- Saat notch dirapatkan, sisi kiri menampilkan pet dan sisi kanan menampilkan sisa
-  waktu selama sesi aktif (dan "Sela" saat idle), sehingga panel dan tampilan
-  ringkas selalu sama.
+- Saat notch dirapatkan, pet di sisi kiri hanya muncul selama sesi timer berjalan;
+  sisi kanan menampilkan pemberitahuan baterai bila ada, atau sisa waktu/"Sela".
+  Saat timer belum dimulai, dijeda, direset, atau selesai, tidak ada pet.
 - Timer berjalan di level aplikasi, jadi tetap berjalan ketika panel ditutup.
 - Saat waktu habis, alarm berbunyi sekali dan status berubah menjadi **Selesai**.
 
@@ -47,9 +47,10 @@ dengan `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` di depannya.
   mengisi, atau terhubung ke charger tetapi tidak mengisi), dan tombol refresh.
 - `BatteryModel` membaca data dari IOKit dan mendengarkan notifikasi perubahan
   sumber daya, dengan polling 15 detik sebagai cadangan.
-- Memasang atau melepas charger menampilkan pemberitahuan singkat di notch tanpa
-  mengganti tab atau menghentikan timer. Jika notch sedang tersembunyi, tampilan
-  ringkas muncul sebentar lalu kembali tersembunyi.
+- Memasang atau melepas charger membuka notch dengan kartu pemberitahuan di atas
+  panel yang sedang aktif tanpa mengganti tab atau menghentikan timer. Jendela
+  utama Sela juga menampilkan kartu yang sama. Setelah sekitar empat detik notch
+  kembali ringkas bila timer berjalan, atau tersembunyi bila tidak ada aktivitas.
 - Baterai 20% atau lebih rendah saat tidak terhubung ke charger memunculkan
   peringatan satu kali sampai baterai pulih di atas 20%.
 - **Battery Alerts** di panel Baterai mengatur kedua jenis pemberitahuan tersebut
@@ -72,10 +73,11 @@ dengan `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` di depannya.
 ## Pet
 
 `PetView` menampilkan **Little Ameath** dari `public/pet-pomodoro/` di panel timer dan
-di sisi kiri tampilan ringkas notch. `pet.json` dibaca dari bundle untuk nama dan path
-spritesheet, lalu tiga frame idle dipotong dari spritesheet 8x9 (sel 192x208) dan
-dimainkan ringan (~0.4 detik/frame) hanya saat sesi berjalan. Tampilan ringkas tetap
-mengutamakan sisa waktu, dan animasi dimatikan bila Reduce Motion aktif.
+di sisi kiri tampilan ringkas notch selama sesi berjalan. `pet.json` dibaca dari bundle
+untuk nama dan path spritesheet, lalu tiga frame idle dipotong dari spritesheet 8x9
+(sel 192x208) dan dimainkan ringan (~0.4 detik/frame) hanya saat sesi berjalan.
+Pemberitahuan baterai sementara menggantikan sisa waktu di sisi kanan, dan animasi
+dimatikan bila Reduce Motion aktif.
 
 ## Ikon
 
@@ -111,9 +113,12 @@ public/pet-pomodoro/          aset pet (pet.json + spritesheet), ikut ke bundle
 
 - DynamicNotchKit ditambahkan sebagai Swift Package dependency
   (`https://github.com/MrKai77/DynamicNotchKit`, versi 1.1.0).
-- `NotchController` membuat satu instance `DynamicNotch(style: .auto)` dengan
-  `TimerPanel` sebagai tampilan penuh, ikon timer di sisi kiri, dan sisa waktu
-  di sisi kanan.
+- `NotchController` membuat satu instance `DynamicNotch(style: .auto)`. Isi panel
+  dibungkus `NotchExpandedContent` yang mengamati pilihan tab dan model baterai,
+  sehingga tab dapat berganti dan kartu notifikasi charger muncul tanpa membuat
+  ulang notch.
+- Notifikasi baterai membuka notch selama beberapa detik dengan `BatteryAlertBanner`
+  di atas panel aktif; `BatteryModel` menerbitkan `alert` yang dikonsumsi controller.
 - Aksi tombol memanggil API async bawaan library: `expand()`, `compact()`, dan `hide()`.
 - `NotchHoverMonitor` memantau posisi kursor tiap 80 ms, sedangkan
   `InteractionAreaReporter` melaporkan area panel yang benar-benar dirender agar

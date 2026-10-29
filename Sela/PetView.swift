@@ -36,3 +36,13 @@ struct PetView: View {
             .scaledToFit()
     }
 }
+
+struct CompactPet: View {
+    @ObservedObject var timer: TimerModel
+
+    var body: some View {
+        if timer.isActive {
+            PetView(timer: timer, height: 16)
+        }
+    }
+}
