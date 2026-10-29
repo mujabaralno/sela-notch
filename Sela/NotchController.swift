@@ -12,11 +12,12 @@ final class NotchController: ObservableObject {
 
     @Published private(set) var status: Status = .hidden
 
+    let music = MusicService(provider: MediaRemoteMusicProvider())
     let timer = TimerModel()
     let battery = BatteryModel()
     let selection = NotchPanelSelection()
     @Published var selectedPanel = 0 {
-        didSet { selection.index = selectedPanel }
+        didSet { selection.select(selectedPanel) }
     }
 
     private static let openDwell: TimeInterval = 0.12
@@ -27,12 +28,13 @@ final class NotchController: ObservableObject {
             NotchExpandedContent(
                 selection: self.selection,
                 timer: self.timer,
-                battery: self.battery
+                battery: self.battery,
+                music: self.music
             )
             .reportsInteractionArea { self.updatePanelRect($0) }
         )
     } compactLeading: {
-        AnyView(CompactPet(timer: self.timer))
+        AnyView(CompactMusicOrPet(timer: self.timer, battery: self.battery, music: self.music))
     } compactTrailing: {
         AnyView(CompactStatusLabel(timer: self.timer, battery: self.battery))
     }
@@ -41,6 +43,7 @@ final class NotchController: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var isExpanded = false
     private var isTransitioning = false
+    private var compactRefreshPending = false
     private var enteredSinceOpen = false
     private var alertPresentationActive = false
     private var alertPresentationTask: Task<Void, Never>?
@@ -53,6 +56,17 @@ final class NotchController: ObservableObject {
             self?.handleMouse(at: point)
         }
         hoverMonitor.start()
+        music.start()
+        NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)
+            .sink { [weak self] _ in
+                MainActor.assumeIsolated { self?.music.stop() }
+            }.store(in: &cancellables)
+        music.$snapshot.sink { [weak self] _ in
+            Task { @MainActor in self?.refreshCompact() }
+        }.store(in: &cancellables)
+        timer.$phase.sink { [weak self] _ in
+            Task { @MainActor in self?.refreshCompact() }
+        }.store(in: &cancellables)
 
         battery.$alert
             .sink { [weak self] alert in
@@ -61,6 +75,14 @@ final class NotchController: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+    }
+
+    private func refreshCompact() {
+        guard !isExpanded else { return }
+        guard !isTransitioning else { compactRefreshPending = true; return }
+        compactRefreshPending = false
+        if timer.showsCompactTime || music.isPlaying { compact() }
+        else { hide() }
     }
 
     func expand() {
@@ -78,6 +100,7 @@ final class NotchController: ObservableObject {
         Task {
             await notch.expand()
             isTransitioning = false
+            if compactRefreshPending { refreshCompact() }
         }
     }
 
@@ -98,6 +121,7 @@ final class NotchController: ObservableObject {
         Task {
             await notch.compact()
             isTransitioning = false
+            if compactRefreshPending { refreshCompact() }
         }
     }
 
@@ -118,6 +142,7 @@ final class NotchController: ObservableObject {
         Task {
             await notch.hide()
             isTransitioning = false
+            if compactRefreshPending { refreshCompact() }
         }
     }
 
@@ -138,6 +163,9 @@ final class NotchController: ObservableObject {
                 enterDate = enteredAt
 
                 if Date().timeIntervalSince(enteredAt) >= Self.openDwell {
+                    if music.isPlaying && !timer.showsCompactTime && battery.alert == nil {
+                        selection.index = 2
+                    } else { selection.index = selection.manualIndex }
                     expand()
                 }
             }
@@ -159,7 +187,7 @@ final class NotchController: ObservableObject {
         guard Date().timeIntervalSince(leftAt) >= Self.closeGrace else { return }
 
         leaveDate = nil
-        if timer.isActive {
+        if timer.showsCompactTime || music.isPlaying {
             compact()
         } else {
             hide()
@@ -222,7 +250,7 @@ final class NotchController: ObservableObject {
         alertPresentationTask?.cancel()
         alertPresentationTask = nil
 
-        if timer.isActive {
+        if timer.showsCompactTime || music.isPlaying {
             compact()
         } else {
             hide()
@@ -287,22 +315,46 @@ final class NotchController: ObservableObject {
 @MainActor
 final class NotchPanelSelection: ObservableObject {
     @Published var index = 0
+    private(set) var manualIndex = 0
+    func select(_ index: Int) {
+        manualIndex = index
+        self.index = index
+    }
 }
 
 struct NotchExpandedContent: View {
     @ObservedObject var selection: NotchPanelSelection
     let timer: TimerModel
     let battery: BatteryModel
+    let music: MusicService
 
     var body: some View {
         VStack(spacing: 6) {
             BatteryAlertBanner(battery: battery)
 
-            if selection.index == 0 {
+            HStack {
+                Button("Timer") { selection.select(0) }
+                Button("Baterai") { selection.select(1) }
+                Button("Music") { selection.select(2) }
+            }
+            if selection.index == 2 {
+                MusicPanel(music: music)
+            } else if selection.index == 0 {
                 TimerPanel(timer: timer)
             } else {
                 BatteryPanel(battery: battery)
             }
         }
+    }
+}
+
+struct CompactMusicOrPet: View {
+    @ObservedObject var timer: TimerModel
+    @ObservedObject var battery: BatteryModel
+    @ObservedObject var music: MusicService
+    var body: some View {
+        if !timer.showsCompactTime && battery.alert == nil && music.isPlaying {
+            MusicArtwork(image: music.snapshot?.artwork)
+        } else { CompactPet(timer: timer) }
     }
 }

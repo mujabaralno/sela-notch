@@ -8,6 +8,9 @@ options:
   groupSortPosition: top
 
 packages:
+  MediaRemoteAdapter:
+    url: https://github.com/ejbills/mediaremote-adapter
+    revision: 5b6afde3f501a3da567e23bf7f23d562938a1809
   DynamicNotchKit:
     url: https://github.com/MrKai77/DynamicNotchKit
     from: 1.1.0
@@ -21,6 +24,8 @@ targets:
       - path: public/pet-pomodoro
         buildPhase: resources
     dependencies:
+      - package: MediaRemoteAdapter
+        embed: true
       - package: DynamicNotchKit
     info:
       path: Sela/Info.plist
