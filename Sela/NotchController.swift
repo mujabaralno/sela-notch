@@ -11,19 +11,17 @@ final class NotchController: ObservableObject {
 
     @Published private(set) var status: Status = .hidden
 
+    let timer = TimerModel()
+
     private lazy var notch = DynamicNotch(style: .auto) {
-        AnyView(NotchContent())
+        AnyView(TimerPanel(timer: self.timer))
     } compactLeading: {
         AnyView(
-            Image(systemName: "sparkles")
+            Image(systemName: "timer")
                 .foregroundStyle(.cyan)
         )
     } compactTrailing: {
-        AnyView(
-            Text("Sela")
-                .font(.caption)
-                .fontWeight(.semibold)
-        )
+        AnyView(CompactTimerLabel(timer: self.timer))
     }
 
     func expand() {

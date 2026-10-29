@@ -4,15 +4,9 @@ struct ContentView: View {
     @StateObject private var notch = NotchController()
 
     var body: some View {
-        VStack(spacing: 24) {
-            VStack(spacing: 6) {
-                Text("Sela")
-                    .font(.largeTitle.weight(.semibold))
-
-                Text("Contoh integrasi DynamicNotchKit")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
+        VStack(spacing: 18) {
+            TimerPanel(timer: notch.timer)
+                .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 16))
 
             HStack(spacing: 12) {
                 Button("Tampilkan Notch") {
@@ -37,8 +31,8 @@ struct ContentView: View {
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
         }
-        .padding(32)
-        .frame(width: 460, height: 300)
+        .padding(24)
+        .frame(width: 380, height: 360)
     }
 }
 
