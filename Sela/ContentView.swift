@@ -31,8 +31,8 @@ struct ContentView: View {
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
         }
-        .padding(24)
-        .frame(width: 380, height: 360)
+        .padding(20)
+        .frame(width: 340, height: 300)
     }
 }
 
