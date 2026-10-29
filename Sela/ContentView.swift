@@ -2,61 +2,21 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var notch = NotchController()
-
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 24) {
+            HStack {
+                Text("Sela").font(.system(size: 20, weight: .semibold))
+                Spacer()
+                Text("Di sela aktivitas Anda").font(.system(size: 11)).selaSecondary()
+            }
+            NotchExpandedContent(selection: notch.selection, timer: notch.timer, battery: notch.battery, music: notch.music)
+                .clipShape(RoundedRectangle(cornerRadius: 24))
             HStack(spacing: 8) {
-                panelButton("Timer", panel: 0)
-                panelButton("Baterai", panel: 1)
-                panelButton("Music", panel: 2)
+                Button("Buka notch") { notch.expand() }.buttonStyle(SelaButtonStyle(prominent: true)).keyboardShortcut(.defaultAction)
+                Button("Ringkas") { notch.compact() }.buttonStyle(SelaButtonStyle())
+                SelaIconButton(symbol: "eye.slash", label: "Sembunyikan notch") { notch.hide() }
+                Spacer()
             }
-            BatteryAlertBanner(battery: notch.battery)
-            Group {
-                if notch.selectedPanel == 0 { TimerPanel(timer: notch.timer) }
-                else if notch.selectedPanel == 2 { MusicPanel(music: notch.music) }
-                else { BatteryPanel(battery: notch.battery) }
-            }
-            .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 16))
-
-            HStack(spacing: 12) {
-                Button("Tampilkan Notch") {
-                    notch.expand()
-                }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
-
-                Button("Ringkas") {
-                    notch.compact()
-                }
-                .buttonStyle(.bordered)
-
-                Button("Sembunyikan") {
-                    notch.hide()
-                }
-                .buttonStyle(.bordered)
-            }
-
-            Text("Status notch: \(notch.status.rawValue)")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
-        }
-        .padding(20)
-        .frame(width: 340, height: 430)
+        }.padding(24).frame(width: 456).selaSurface()
     }
-
-    @ViewBuilder
-    private func panelButton(_ title: String, panel: Int) -> some View {
-        if notch.selectedPanel == panel {
-            Button(title) { notch.selectedPanel = panel }
-                .buttonStyle(.borderedProminent)
-        } else {
-            Button(title) { notch.selectedPanel = panel }
-                .buttonStyle(.bordered)
-        }
-    }
-}
-
-#Preview {
-    ContentView()
 }

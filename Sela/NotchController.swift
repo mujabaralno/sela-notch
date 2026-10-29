@@ -34,19 +34,18 @@ final class NotchController: ObservableObject {
             .reportsInteractionArea { self.updatePanelRect($0) }
         )
     } compactLeading: {
-        AnyView(CompactMusicOrPet(timer: self.timer, battery: self.battery, music: self.music))
+        AnyView(SelaCompactWing(timer: self.timer, battery: self.battery, music: self.music, leading: true))
     } compactTrailing: {
-        AnyView(CompactStatusLabel(timer: self.timer, battery: self.battery))
+        AnyView(SelaCompactWing(timer: self.timer, battery: self.battery, music: self.music, leading: false))
     }
 
     private let hoverMonitor = NotchHoverMonitor()
+    private let floatingPanel = FloatingSelaPanel()
     private var cancellables = Set<AnyCancellable>()
     private var isExpanded = false
     private var isTransitioning = false
     private var compactRefreshPending = false
     private var enteredSinceOpen = false
-    private var alertPresentationActive = false
-    private var alertPresentationTask: Task<Void, Never>?
     private var enterDate: Date?
     private var leaveDate: Date?
     private var panelRect: CGRect = .null
@@ -81,8 +80,15 @@ final class NotchController: ObservableObject {
         guard !isExpanded else { return }
         guard !isTransitioning else { compactRefreshPending = true; return }
         compactRefreshPending = false
-        if timer.showsCompactTime || music.isPlaying { compact() }
+        if SelaLiveActivity.resolve(timer: timer, battery: battery, music: music) != .idle { compact() }
         else { hide() }
+    }
+
+    private func configureMotion() {
+        let reduced = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        notch.transitionConfiguration = .init(openingAnimation: reduced ? .linear(duration: 0) : SelaTheme.spring,
+            closingAnimation: reduced ? .linear(duration: 0) : SelaTheme.fade, conversionAnimation: reduced ? .linear(duration: 0) : SelaTheme.spring,
+            skipIntermediateHides: true)
     }
 
     func expand() {
@@ -91,14 +97,22 @@ final class NotchController: ObservableObject {
         isTransitioning = true
         isExpanded = true
         enteredSinceOpen = false
-        alertPresentationTask?.cancel()
-        alertPresentationTask = nil
         enterDate = nil
         leaveDate = nil
         status = .expanded
 
         Task {
-            await notch.expand()
+            configureMotion()
+            let screen = presentationScreen
+            if screen.safeAreaInsets.top > 0 {
+                floatingPanel.hide()
+                await notch.expand(on: screen)
+            } else {
+                await notch.hide()
+                floatingPanel.show(content: AnyView(NotchExpandedContent(selection: selection, timer: timer, battery: battery, music: music)
+                    .clipShape(RoundedRectangle(cornerRadius: SelaTheme.radius))), screen: screen)
+                panelRect = floatingPanel.frame
+            }
             isTransitioning = false
             if compactRefreshPending { refreshCompact() }
         }
@@ -110,16 +124,25 @@ final class NotchController: ObservableObject {
         isTransitioning = true
         isExpanded = false
         enteredSinceOpen = false
-        alertPresentationActive = false
-        alertPresentationTask?.cancel()
-        alertPresentationTask = nil
         enterDate = nil
         leaveDate = nil
         panelRect = .null
         status = .compact
 
         Task {
-            await notch.compact()
+            configureMotion()
+            let screen = presentationScreen
+            if screen.safeAreaInsets.top > 0 {
+                floatingPanel.hide()
+                await notch.compact(on: screen)
+            } else {
+                await notch.hide()
+                floatingPanel.show(content: AnyView(HStack(spacing: 16) {
+                    SelaCompactWing(timer: timer, battery: battery, music: music, leading: true)
+                    SelaCompactWing(timer: timer, battery: battery, music: music, leading: false)
+                }.padding(.horizontal, 16).frame(width: 112, height: 36).selaSurface().clipShape(Capsule())), screen: screen)
+                panelRect = floatingPanel.frame
+            }
             isTransitioning = false
             if compactRefreshPending { refreshCompact() }
         }
@@ -131,15 +154,13 @@ final class NotchController: ObservableObject {
         isTransitioning = true
         isExpanded = false
         enteredSinceOpen = false
-        alertPresentationActive = false
-        alertPresentationTask?.cancel()
-        alertPresentationTask = nil
         enterDate = nil
         leaveDate = nil
         panelRect = .null
         status = .hidden
 
         Task {
+            floatingPanel.hide()
             await notch.hide()
             isTransitioning = false
             if compactRefreshPending { refreshCompact() }
@@ -187,7 +208,7 @@ final class NotchController: ObservableObject {
         guard Date().timeIntervalSince(leftAt) >= Self.closeGrace else { return }
 
         leaveDate = nil
-        if timer.showsCompactTime || music.isPlaying {
+        if SelaLiveActivity.resolve(timer: timer, battery: battery, music: music) != .idle {
             compact()
         } else {
             hide()
@@ -195,82 +216,7 @@ final class NotchController: ObservableObject {
     }
 
     private func handleBatteryAlert(_ alert: BatteryAlert?) {
-        guard alert != nil else {
-            restoreAfterAlert()
-            return
-        }
-
-        guard !alertPresentationActive, status != .expanded else { return }
-
-        alertPresentationActive = true
-        presentAlertPanel(attempt: 0)
-    }
-
-    private func presentAlertPanel(attempt: Int) {
-        guard alertPresentationActive, battery.alert != nil else { return }
-        guard status != .expanded else { return }
-
-        guard !isTransitioning else {
-            guard attempt < 15 else {
-                alertPresentationActive = false
-                return
-            }
-
-            scheduleAlertStep { [weak self] in
-                self?.presentAlertPanel(attempt: attempt + 1)
-            }
-            return
-        }
-
-        alertPresentationTask = nil
-        expand()
-    }
-
-    private func restoreAfterAlert(attempt: Int = 0) {
-        guard alertPresentationActive, battery.alert == nil else { return }
-
-        if enteredSinceOpen || isMouseInsidePanelArea {
-            alertPresentationActive = false
-            return
-        }
-
-        guard !isTransitioning else {
-            guard attempt < 15 else {
-                alertPresentationActive = false
-                return
-            }
-
-            scheduleAlertStep { [weak self] in
-                self?.restoreAfterAlert(attempt: attempt + 1)
-            }
-            return
-        }
-
-        alertPresentationActive = false
-        alertPresentationTask?.cancel()
-        alertPresentationTask = nil
-
-        if timer.showsCompactTime || music.isPlaying {
-            compact()
-        } else {
-            hide()
-        }
-    }
-
-    private func scheduleAlertStep(_ action: @escaping @MainActor () -> Void) {
-        alertPresentationTask?.cancel()
-        alertPresentationTask = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(80))
-            guard !Task.isCancelled else { return }
-            action()
-        }
-    }
-
-    private var isMouseInsidePanelArea: Bool {
-        let point = NSEvent.mouseLocation
-        return Self.activationRect.contains(point)
-            || notch.isHovering
-            || panelRect.insetBy(dx: -12, dy: -12).contains(point)
+        refreshCompact()
     }
 
     private func updatePanelRect(_ frame: CGRect, attempt: Int = 0) {
@@ -296,8 +242,12 @@ final class NotchController: ObservableObject {
         )
     }
 
+    private var presentationScreen: NSScreen {
+        NSScreen.screens.first(where: { $0.frame.contains(NSEvent.mouseLocation) }) ?? NSScreen.screens[0]
+    }
+
     private static var activationRect: CGRect {
-        guard let screen = NSScreen.main ?? NSScreen.screens.first else { return .null }
+        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(NSEvent.mouseLocation) }) ?? NSScreen.main ?? NSScreen.screens.first else { return .null }
 
         let menuBarHeight = screen.frame.maxY - screen.visibleFrame.maxY
         let height = menuBarHeight + 6
@@ -328,33 +278,21 @@ struct NotchExpandedContent: View {
     let battery: BatteryModel
     let music: MusicService
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
-        VStack(spacing: 6) {
-            BatteryAlertBanner(battery: battery)
-
-            HStack {
-                Button("Timer") { selection.select(0) }
-                Button("Baterai") { selection.select(1) }
-                Button("Music") { selection.select(2) }
+        VStack(spacing: 12) {
+            SelaNavigation(selection: selection).modifier(SelaArrival())
+            Group {
+                if selection.index == 2 { MusicPanel(music: music) }
+                else if selection.index == 0 { TimerPanel(timer: timer) }
+                else { BatteryPanel(battery: battery) }
             }
-            if selection.index == 2 {
-                MusicPanel(music: music)
-            } else if selection.index == 0 {
-                TimerPanel(timer: timer)
-            } else {
-                BatteryPanel(battery: battery)
-            }
+            .modifier(SelaArrival(delay: 0.06))
+            .id(selection.index)
+            .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.98)))
         }
-    }
-}
-
-struct CompactMusicOrPet: View {
-    @ObservedObject var timer: TimerModel
-    @ObservedObject var battery: BatteryModel
-    @ObservedObject var music: MusicService
-    var body: some View {
-        if !timer.showsCompactTime && battery.alert == nil && music.isPlaying {
-            MusicArtwork(image: music.snapshot?.artwork)
-        } else { CompactPet(timer: timer) }
+        .padding(16)
+        .frame(width: SelaTheme.width)
+        .selaSurface()
     }
 }

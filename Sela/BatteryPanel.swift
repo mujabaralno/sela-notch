@@ -4,137 +4,69 @@ struct BatteryAlertCard: View {
     let alert: BatteryAlert
     let percentage: Int?
     let conditionText: String
-
     var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: alert.symbolName)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(tint)
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(alert.message)
-                    .font(.caption.weight(.semibold))
-
-                if let detail {
-                    Text(detail)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10))
-        .accessibilityElement(children: .combine)
-    }
-
-    private var detail: String? {
-        if case .lowBattery = alert { return nil }
-        guard let percentage else { return conditionText }
-        return "\(percentage)% · \(conditionText)"
-    }
-
-    private var tint: Color {
-        switch alert {
-        case .chargerConnected: return .green
-        case .chargerDisconnected: return .secondary
-        case .lowBattery: return .orange
-        }
+        Label(alert.message, systemImage: alert.symbolName)
+            .font(.system(size: 11, weight: .medium)).foregroundStyle(SelaTheme.amber)
+            .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+            .background(SelaTheme.surface, in: RoundedRectangle(cornerRadius: 12))
+            .accessibilityElement(children: .combine)
     }
 }
-
 struct BatteryAlertBanner: View {
     @ObservedObject var battery: BatteryModel
-
     var body: some View {
-        Group {
-            if let alert = battery.alert {
-                BatteryAlertCard(
-                    alert: alert,
-                    percentage: battery.percentage,
-                    conditionText: battery.conditionText
-                )
-                .frame(width: 272)
-                .transition(.opacity)
-            }
+        if let alert = battery.alert {
+            BatteryAlertCard(alert: alert, percentage: battery.percentage, conditionText: battery.conditionText)
         }
-        .animation(.easeInOut(duration: 0.2), value: battery.alert)
     }
 }
 
 struct BatteryPanel: View {
     @ObservedObject var battery: BatteryModel
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 12) {
-                Image(systemName: symbolName)
-                    .font(.system(size: 30, weight: .medium))
-                    .foregroundStyle(tint)
-                    .accessibilityHidden(true)
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(battery.percentage.map { "\($0)%" } ?? "—")
-                        .font(.system(size: 26, weight: .semibold, design: .rounded))
-                        .monospacedDigit()
-
-                    Text(battery.conditionText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer(minLength: 0)
-
-                Button {
-                    battery.refresh()
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                }
-                .buttonStyle(.borderless)
-                .accessibilityLabel("Perbarui status baterai")
-            }
-            .accessibilityElement(children: .combine)
-
-            Divider()
-
-            Toggle("Battery Alerts", isOn: $battery.alertsEnabled)
-                .font(.caption)
-
-            Text("Mengatur pemberitahuan charger dan peringatan baterai rendah.")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-        .padding(12)
-        .frame(width: 272)
-    }
-
-    private var symbolName: String {
-        guard battery.hasBattery else { return "battery.0" }
-        if battery.condition == .charging { return "battery.100.bolt" }
-
-        switch battery.percentage ?? 0 {
-        case ..<13: return "battery.0"
-        case ..<38: return "battery.25"
-        case ..<63: return "battery.50"
-        case ..<88: return "battery.75"
-        default: return "battery.100"
-        }
-    }
-
-    private var tint: Color {
-        if battery.condition == .charging { return .green }
-        if battery.condition == .onBattery, let percentage = battery.percentage,
-           percentage <= BatteryAlertPolicy.lowBatteryThreshold {
-            return .red
-        }
-        return .primary
+        BatteryFace(percentage: battery.percentage, condition: battery.conditionText,
+                    charging: battery.condition == .charging,
+                    low: battery.condition == .onBattery && (battery.percentage ?? 100) <= BatteryAlertPolicy.lowBatteryThreshold,
+                    alertsEnabled: $battery.alertsEnabled, refresh: battery.refresh)
     }
 }
 
-#Preview {
-    BatteryPanel(battery: BatteryModel())
+struct BatteryFace: View {
+    let percentage: Int?
+    let condition: String
+    var charging = false
+    var low = false
+    @Binding var alertsEnabled: Bool
+    var refresh: () -> Void
+    private var tint: Color { low ? SelaTheme.amber : SelaTheme.green }
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack(alignment: .center, spacing: 12) {
+                Text(percentage.map { "\($0)%" } ?? "—")
+                    .font(.system(size: 34, weight: .medium)).tracking(-1).monospacedDigit()
+                VStack(alignment: .leading, spacing: 4) {
+                    Label(charging ? "Mengisi daya" : (low ? "Baterai rendah" : "Daya Mac"), systemImage: charging ? "bolt.fill" : "battery.100")
+                        .font(.system(size: 13, weight: .medium)).foregroundStyle(tint)
+                    Text(condition).font(.system(size: 11)).selaSecondary().lineLimit(2)
+                }
+                Spacer(minLength: 0)
+                SelaIconButton(symbol: "arrow.clockwise", label: "Perbarui baterai", action: refresh)
+            }
+            SelaProgress(progress: Double(percentage ?? 0) / 100, tint: tint)
+            HStack {
+                Toggle("Battery Alerts", isOn: $alertsEnabled).toggleStyle(.switch).controlSize(.mini)
+                    .font(.system(size: 11)).accessibilityLabel("Pemberitahuan charger dan baterai rendah")
+                Spacer()
+                Text("Ambang \(BatteryAlertPolicy.lowBatteryThreshold)%").font(.system(size: 11)).selaSecondary()
+            }
+        }.frame(height: 116).foregroundStyle(SelaTheme.ivory)
+    }
+}
+#Preview("Battery · Charging") {
+    BatteryFace(percentage: 76, condition: "Sedang mengisi daya", charging: true, alertsEnabled: .constant(true), refresh: {})
+        .padding(16).frame(width: 408).selaSurface()
+}
+#Preview("Battery · Low") {
+    BatteryFace(percentage: 14, condition: "Hubungkan charger", low: true, alertsEnabled: .constant(true), refresh: {})
+        .padding(16).frame(width: 408).selaSurface()
 }
