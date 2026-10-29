@@ -13,6 +13,8 @@
 		29DB11595A4253360BE93AE6 /* CompactTimerLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E975E497E23D3541656F8C4 /* CompactTimerLabel.swift */; };
 		3BF002725805A0495A8D2856 /* NotchChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656770A44799E4C1525B0061 /* NotchChrome.swift */; };
 		3CE57375E48F0E23E426F495 /* DynamicNotchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1E383B038B9D833CC7CA107F /* DynamicNotchKit */; };
+		3EBD6BFCB5F5D0B9A843E498 /* ShelfService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCA97600B9DEB6C3F0513C1E /* ShelfService.swift */; };
+		647C91FA4E71405E2D30CE69 /* ShelfDropContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC775B32FE70A52140660914 /* ShelfDropContainer.swift */; };
 		734AD2B96B2894FE9A310FBC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5620769B923ADA75805EA7F /* ContentView.swift */; };
 		7644BE27627D5FAC7F0813FE /* NotchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8B8A08985E91EE235CF3B55 /* NotchController.swift */; };
 		8335B32F9E13AEA2F8E450AF /* FloatingSelaPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6AD10AA9D0EC17EEE9555D7 /* FloatingSelaPanel.swift */; };
@@ -25,12 +27,14 @@
 		B8B3C22935378D2095AD6995 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 0F61D324CC83D9EBC7326925 /* LICENSE */; };
 		C092CFEB579225E19E9ED678 /* SelaMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADFC983B05663943D189037E /* SelaMotion.swift */; };
 		C4D9A67BD462100F647CE7F4 /* BatteryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7330C42759C8E95772D55735 /* BatteryModel.swift */; };
+		C7F5DA897225A4A99E3C3366 /* ShelfPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD599391DE37314D00C7F47 /* ShelfPanel.swift */; };
 		CB2791B7311F55FF46C30F7E /* MediaRemoteMusicProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC3CC0CD87ECF8BC3CDFC5C8 /* MediaRemoteMusicProvider.swift */; };
 		D25FDE16AD13659B49F6205F /* BatteryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA41BB0ECAF7DEA8DCF1A58 /* BatteryPanel.swift */; };
 		D2D40B261611CA6F88191B33 /* TimerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BAF5D881D995DE17A8BED29 /* TimerPanel.swift */; };
 		D37510F385ACA9113A00E995 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3EFE3978F9DCDE6792F59055 /* Assets.xcassets */; };
 		D879DC8B8B9F4761C5B1D5FD /* TimerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB74DAAF969B7CE2A4D936B1 /* TimerModel.swift */; };
 		DC0DB69731A6D236B9C40522 /* NotchHoverMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F42F21DBF4DF4E9A1E3C9A6 /* NotchHoverMonitor.swift */; };
+		E033D85DB9471BF652612F17 /* ShelfDragItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC98B21C485449D9857C786 /* ShelfDragItem.swift */; };
 		E7008893F4CAD607D0152459 /* pet.json in Resources */ = {isa = PBXBuildFile; fileRef = 113DC693B849181D93878F7A /* pet.json */; };
 		EA0D59BAF6ACA1158D351D61 /* MediaRemoteAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 060AEF3F0F62564214E8E004 /* MediaRemoteAdapter */; };
 		F1701CEE690D70BA4E89D6E5 /* PetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6B583E10FAC3213E40E4E9 /* PetView.swift */; };
@@ -66,16 +70,20 @@
 		7330C42759C8E95772D55735 /* BatteryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryModel.swift; sourceTree = "<group>"; };
 		8615DCBEC7711EE5C9EDD520 /* SelaPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelaPreviews.swift; sourceTree = "<group>"; };
 		90A0A67967825323D8086FC3 /* MusicPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPanel.swift; sourceTree = "<group>"; };
+		9CD599391DE37314D00C7F47 /* ShelfPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfPanel.swift; sourceTree = "<group>"; };
 		9DA41BB0ECAF7DEA8DCF1A58 /* BatteryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryPanel.swift; sourceTree = "<group>"; };
 		9F42F21DBF4DF4E9A1E3C9A6 /* NotchHoverMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchHoverMonitor.swift; sourceTree = "<group>"; };
 		AC3CC0CD87ECF8BC3CDFC5C8 /* MediaRemoteMusicProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaRemoteMusicProvider.swift; sourceTree = "<group>"; };
+		AC775B32FE70A52140660914 /* ShelfDropContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfDropContainer.swift; sourceTree = "<group>"; };
 		AD59B033D5DE524B2AC37E98 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		ADFC983B05663943D189037E /* SelaMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelaMotion.swift; sourceTree = "<group>"; };
 		B90423DC03B7C78CBA898DFF /* MediaRemoteAdapter */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MediaRemoteAdapter; path = Vendor/MediaRemoteAdapter; sourceTree = SOURCE_ROOT; };
 		BB74DAAF969B7CE2A4D936B1 /* TimerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerModel.swift; sourceTree = "<group>"; };
+		BEC98B21C485449D9857C786 /* ShelfDragItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfDragItem.swift; sourceTree = "<group>"; };
 		C27B75199196B6822CFEAB90 /* PetSpriteSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetSpriteSheet.swift; sourceTree = "<group>"; };
 		C3AE963604779958F1D0F391 /* SelaTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelaTheme.swift; sourceTree = "<group>"; };
 		CE540DAB80598BE53C26424F /* SelaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelaApp.swift; sourceTree = "<group>"; };
+		DCA97600B9DEB6C3F0513C1E /* ShelfService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfService.swift; sourceTree = "<group>"; };
 		E0F75403A8262C004CD24348 /* BatteryAlertPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryAlertPolicy.swift; sourceTree = "<group>"; };
 		E5620769B923ADA75805EA7F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		E6AD10AA9D0EC17EEE9555D7 /* FloatingSelaPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingSelaPanel.swift; sourceTree = "<group>"; };
@@ -111,6 +119,17 @@
 			path = Vendor;
 			sourceTree = "<group>";
 		};
+		1278E0E17C76808DC15C96DC /* Shelf */ = {
+			isa = PBXGroup;
+			children = (
+				BEC98B21C485449D9857C786 /* ShelfDragItem.swift */,
+				AC775B32FE70A52140660914 /* ShelfDropContainer.swift */,
+				9CD599391DE37314D00C7F47 /* ShelfPanel.swift */,
+				DCA97600B9DEB6C3F0513C1E /* ShelfService.swift */,
+			);
+			path = Shelf;
+			sourceTree = "<group>";
+		};
 		226A628E5A9BBD603C2FBA29 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -124,6 +143,7 @@
 			children = (
 				8D69778F4B5E79EC62CB2E17 /* Design */,
 				88FDBC51688CC6E8E2AB2AB2 /* Music */,
+				1278E0E17C76808DC15C96DC /* Shelf */,
 				3EFE3978F9DCDE6792F59055 /* Assets.xcassets */,
 				E0F75403A8262C004CD24348 /* BatteryAlertPolicy.swift */,
 				7330C42759C8E95772D55735 /* BatteryModel.swift */,
@@ -301,6 +321,10 @@
 				C092CFEB579225E19E9ED678 /* SelaMotion.swift in Sources */,
 				8DE0A9C24705A1D97B78AB1F /* SelaPreviews.swift in Sources */,
 				9867ACEE24AFD82D4CAF2E9D /* SelaTheme.swift in Sources */,
+				E033D85DB9471BF652612F17 /* ShelfDragItem.swift in Sources */,
+				647C91FA4E71405E2D30CE69 /* ShelfDropContainer.swift in Sources */,
+				C7F5DA897225A4A99E3C3366 /* ShelfPanel.swift in Sources */,
+				3EBD6BFCB5F5D0B9A843E498 /* ShelfService.swift in Sources */,
 				D879DC8B8B9F4761C5B1D5FD /* TimerModel.swift in Sources */,
 				D2D40B261611CA6F88191B33 /* TimerPanel.swift in Sources */,
 			);

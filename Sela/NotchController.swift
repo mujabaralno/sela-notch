@@ -12,6 +12,8 @@ final class NotchController: ObservableObject {
 
     @Published private(set) var status: Status = .hidden
 
+    let shelf = ShelfService()
+    private var dragObservation = ShelfDragObservation()
     let music = MusicService(provider: MediaRemoteMusicProvider())
     let timer = TimerModel()
     let battery = BatteryModel()
@@ -29,14 +31,15 @@ final class NotchController: ObservableObject {
                 selection: self.selection,
                 timer: self.timer,
                 battery: self.battery,
-                music: self.music
+                music: self.music,
+                shelf: self.shelf
             )
             .reportsInteractionArea { self.updatePanelRect($0) }
         )
     } compactLeading: {
-        AnyView(SelaCompactWing(timer: self.timer, battery: self.battery, music: self.music, leading: true))
+        AnyView(SelaCompactWing(timer: self.timer, battery: self.battery, music: self.music, shelf: self.shelf, leading: true))
     } compactTrailing: {
-        AnyView(SelaCompactWing(timer: self.timer, battery: self.battery, music: self.music, leading: false))
+        AnyView(SelaCompactWing(timer: self.timer, battery: self.battery, music: self.music, shelf: self.shelf, leading: false))
     }
 
     private let hoverMonitor = NotchHoverMonitor()
@@ -56,6 +59,9 @@ final class NotchController: ObservableObject {
         }
         hoverMonitor.start()
         music.start()
+        shelf.$items.sink { [weak self] _ in
+            Task { @MainActor in self?.refreshCompact() }
+        }.store(in: &cancellables)
         NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)
             .sink { [weak self] _ in
                 MainActor.assumeIsolated { self?.music.stop() }
@@ -77,10 +83,10 @@ final class NotchController: ObservableObject {
     }
 
     private func refreshCompact() {
-        guard !isExpanded else { return }
+        guard !isExpanded, !shelf.isBusy else { return }
         guard !isTransitioning else { compactRefreshPending = true; return }
         compactRefreshPending = false
-        if SelaLiveActivity.resolve(timer: timer, battery: battery, music: music) != .idle { compact() }
+        if SelaLiveActivity.resolve(timer: timer, battery: battery, music: music, shelf: shelf) != .idle { compact() }
         else { hide() }
     }
 
@@ -109,7 +115,7 @@ final class NotchController: ObservableObject {
                 await notch.expand(on: screen)
             } else {
                 await notch.hide()
-                floatingPanel.show(content: AnyView(NotchExpandedContent(selection: selection, timer: timer, battery: battery, music: music)
+                floatingPanel.show(content: AnyView(NotchExpandedContent(selection: selection, timer: timer, battery: battery, music: music, shelf: shelf)
                     .clipShape(RoundedRectangle(cornerRadius: SelaTheme.radius))), screen: screen)
                 panelRect = floatingPanel.frame
             }
@@ -119,7 +125,7 @@ final class NotchController: ObservableObject {
     }
 
     func compact() {
-        guard status != .compact, !isTransitioning else { return }
+        guard status != .compact, !isTransitioning, !shelf.isBusy else { return }
 
         isTransitioning = true
         isExpanded = false
@@ -138,8 +144,8 @@ final class NotchController: ObservableObject {
             } else {
                 await notch.hide()
                 floatingPanel.show(content: AnyView(HStack(spacing: 16) {
-                    SelaCompactWing(timer: timer, battery: battery, music: music, leading: true)
-                    SelaCompactWing(timer: timer, battery: battery, music: music, leading: false)
+                    SelaCompactWing(timer: timer, battery: battery, music: music, shelf: shelf, leading: true)
+                    SelaCompactWing(timer: timer, battery: battery, music: music, shelf: shelf, leading: false)
                 }.padding(.horizontal, 16).frame(width: 112, height: 36).selaSurface().clipShape(Capsule())), screen: screen)
                 panelRect = floatingPanel.frame
             }
@@ -149,7 +155,7 @@ final class NotchController: ObservableObject {
     }
 
     func hide() {
-        guard status != .hidden, !isTransitioning else { return }
+        guard status != .hidden, !isTransitioning, !shelf.isBusy else { return }
 
         isTransitioning = true
         isExpanded = false
@@ -168,10 +174,24 @@ final class NotchController: ObservableObject {
     }
 
     private func handleMouse(at point: CGPoint) {
+        let dragBoard = NSPasteboard(name: .drag)
+        let dragging = dragObservation.update(changeCount: dragBoard.changeCount,
+            hasFiles: dragBoard.types?.contains(.fileURL) == true,
+            mouseDown: NSEvent.pressedMouseButtons & 1 != 0)
+        if shelf.externalDrag != dragging { shelf.externalDrag = dragging }
         guard !isTransitioning else { return }
 
         let inActivation = Self.activationRect.contains(point)
         let inPanel = notch.isHovering || panelRect.insetBy(dx: -12, dy: -12).contains(point)
+
+        if shelf.externalDrag && !shelf.outgoingDrag && (inActivation || inPanel) {
+            selection.index = 3
+            expand()
+            enteredSinceOpen = true
+            leaveDate = nil
+        }
+        // Retain the panel even beyond its bounds until AppKit ends the session.
+        if shelf.isBusy { leaveDate = nil; return }
 
         if inActivation || inPanel {
             leaveDate = nil
@@ -208,7 +228,7 @@ final class NotchController: ObservableObject {
         guard Date().timeIntervalSince(leftAt) >= Self.closeGrace else { return }
 
         leaveDate = nil
-        if SelaLiveActivity.resolve(timer: timer, battery: battery, music: music) != .idle {
+        if SelaLiveActivity.resolve(timer: timer, battery: battery, music: music, shelf: shelf) != .idle {
             compact()
         } else {
             hide()
@@ -277,13 +297,22 @@ struct NotchExpandedContent: View {
     let timer: TimerModel
     let battery: BatteryModel
     let music: MusicService
+    @ObservedObject var shelf: ShelfService
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
+        ShelfDropContainer(shelf: shelf) { content }
+            .onChange(of: shelf.targeted) { targeted in
+                if targeted && !shelf.outgoingDrag { selection.index = 3 }
+            }
+            .frame(width: SelaTheme.width, height: selection.index == 3 ? (shelf.items.isEmpty ? 240 : 352) + (shelf.message == nil ? 0 : 40) : 188)
+    }
+    private var content: some View {
         VStack(spacing: 12) {
-            SelaNavigation(selection: selection).modifier(SelaArrival())
+            SelaNavigation(selection: selection).disabled(shelf.isBusy).modifier(SelaArrival())
             Group {
-                if selection.index == 2 { MusicPanel(music: music) }
+                if selection.index == 3 { ShelfPanel(shelf: shelf) }
+                else if selection.index == 2 { MusicPanel(music: music) }
                 else if selection.index == 0 { TimerPanel(timer: timer) }
                 else { BatteryPanel(battery: battery) }
             }
@@ -294,5 +323,10 @@ struct NotchExpandedContent: View {
         .padding(16)
         .frame(width: SelaTheme.width)
         .selaSurface()
+        .overlay {
+            if shelf.targeted {
+                RoundedRectangle(cornerRadius: 20).strokeBorder(SelaTheme.green, style: StrokeStyle(lineWidth: 2, dash: [6, 4])).allowsHitTesting(false)
+            }
+        }
     }
 }
