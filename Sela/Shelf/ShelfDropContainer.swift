@@ -13,7 +13,14 @@ struct ShelfDropContainer<Content: View>: NSViewRepresentable {
         view.invalidateIntrinsicContentSize()
     }
     static func dismantleNSView(_ view: ShelfDropView<Content>, coordinator: ()) { view.restoreLevel() }
-    func sizeThatFits(_ proposal: ProposedViewSize, nsView: ShelfDropView<Content>, context: Context) -> CGSize? { nsView.host.fittingSize }
+    func sizeThatFits(_ proposal: ProposedViewSize, nsView: ShelfDropView<Content>, context: Context) -> CGSize? {
+        // Respect the shell's explicit dimensions instead of letting nested
+        // hosting views negotiate an oversized intrinsic height.
+        if let width = proposal.width, let height = proposal.height {
+            return CGSize(width: width, height: height)
+        }
+        return nsView.host.fittingSize
+    }
 }
 
 final class ShelfDropView<Content: View>: NSView {
