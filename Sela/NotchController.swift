@@ -14,34 +14,25 @@ final class NotchController: ObservableObject {
 
     let timer = TimerModel()
     let battery = BatteryModel()
-    @Published var selectedPanel = 0
+    let selection = NotchPanelSelection()
+    @Published var selectedPanel = 0 {
+        didSet { selection.index = selectedPanel }
+    }
 
     private static let openDwell: TimeInterval = 0.12
     private static let closeGrace: TimeInterval = 0.5
 
     private lazy var notch = DynamicNotch(style: .auto) {
         AnyView(
-            VStack(spacing: 6) {
-                Group {
-                    if self.selectedPanel == 0 { TimerPanel(timer: self.timer) }
-                    else { BatteryPanel(battery: self.battery) }
-                }
-
-                if let alert = self.battery.alert {
-                    Label(alert.message, systemImage: alert.symbolName)
-                        .font(.caption.weight(.medium))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(.regularMaterial, in: Capsule())
-                        .transition(.opacity)
-                        .accessibilityLabel(alert.message)
-                }
-            }
-            .animation(.easeInOut(duration: 0.2), value: self.battery.alert)
-                .reportsInteractionArea { self.updatePanelRect($0) }
+            NotchExpandedContent(
+                selection: self.selection,
+                timer: self.timer,
+                battery: self.battery
+            )
+            .reportsInteractionArea { self.updatePanelRect($0) }
         )
     } compactLeading: {
-        AnyView(PetView(timer: self.timer, height: 16))
+        AnyView(CompactPet(timer: self.timer))
     } compactTrailing: {
         AnyView(CompactStatusLabel(timer: self.timer, battery: self.battery))
     }
@@ -51,7 +42,8 @@ final class NotchController: ObservableObject {
     private var isExpanded = false
     private var isTransitioning = false
     private var enteredSinceOpen = false
-    private var alertCompactActive = false
+    private var alertPresentationActive = false
+    private var alertPresentationTask: Task<Void, Never>?
     private var enterDate: Date?
     private var leaveDate: Date?
     private var panelRect: CGRect = .null
@@ -77,7 +69,8 @@ final class NotchController: ObservableObject {
         isTransitioning = true
         isExpanded = true
         enteredSinceOpen = false
-        alertCompactActive = false
+        alertPresentationTask?.cancel()
+        alertPresentationTask = nil
         enterDate = nil
         leaveDate = nil
         status = .expanded
@@ -94,6 +87,9 @@ final class NotchController: ObservableObject {
         isTransitioning = true
         isExpanded = false
         enteredSinceOpen = false
+        alertPresentationActive = false
+        alertPresentationTask?.cancel()
+        alertPresentationTask = nil
         enterDate = nil
         leaveDate = nil
         panelRect = .null
@@ -111,7 +107,9 @@ final class NotchController: ObservableObject {
         isTransitioning = true
         isExpanded = false
         enteredSinceOpen = false
-        alertCompactActive = false
+        alertPresentationActive = false
+        alertPresentationTask?.cancel()
+        alertPresentationTask = nil
         enterDate = nil
         leaveDate = nil
         panelRect = .null
@@ -148,15 +146,6 @@ final class NotchController: ObservableObject {
 
         enterDate = nil
 
-        if !isExpanded, alertCompactActive, status == .compact {
-            if battery.alert == nil {
-                alertCompactActive = false
-                if !timer.isActive { hide() }
-            }
-            leaveDate = nil
-            return
-        }
-
         guard isExpanded, enteredSinceOpen else {
             leaveDate = nil
             return
@@ -178,10 +167,82 @@ final class NotchController: ObservableObject {
     }
 
     private func handleBatteryAlert(_ alert: BatteryAlert?) {
-        guard alert != nil, status == .hidden, !isTransitioning else { return }
+        guard alert != nil else {
+            restoreAfterAlert()
+            return
+        }
 
-        alertCompactActive = true
-        compact()
+        guard !alertPresentationActive, status != .expanded else { return }
+
+        alertPresentationActive = true
+        presentAlertPanel(attempt: 0)
+    }
+
+    private func presentAlertPanel(attempt: Int) {
+        guard alertPresentationActive, battery.alert != nil else { return }
+        guard status != .expanded else { return }
+
+        guard !isTransitioning else {
+            guard attempt < 15 else {
+                alertPresentationActive = false
+                return
+            }
+
+            scheduleAlertStep { [weak self] in
+                self?.presentAlertPanel(attempt: attempt + 1)
+            }
+            return
+        }
+
+        alertPresentationTask = nil
+        expand()
+    }
+
+    private func restoreAfterAlert(attempt: Int = 0) {
+        guard alertPresentationActive, battery.alert == nil else { return }
+
+        if enteredSinceOpen || isMouseInsidePanelArea {
+            alertPresentationActive = false
+            return
+        }
+
+        guard !isTransitioning else {
+            guard attempt < 15 else {
+                alertPresentationActive = false
+                return
+            }
+
+            scheduleAlertStep { [weak self] in
+                self?.restoreAfterAlert(attempt: attempt + 1)
+            }
+            return
+        }
+
+        alertPresentationActive = false
+        alertPresentationTask?.cancel()
+        alertPresentationTask = nil
+
+        if timer.isActive {
+            compact()
+        } else {
+            hide()
+        }
+    }
+
+    private func scheduleAlertStep(_ action: @escaping @MainActor () -> Void) {
+        alertPresentationTask?.cancel()
+        alertPresentationTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(80))
+            guard !Task.isCancelled else { return }
+            action()
+        }
+    }
+
+    private var isMouseInsidePanelArea: Bool {
+        let point = NSEvent.mouseLocation
+        return Self.activationRect.contains(point)
+            || notch.isHovering
+            || panelRect.insetBy(dx: -12, dy: -12).contains(point)
     }
 
     private func updatePanelRect(_ frame: CGRect, attempt: Int = 0) {
@@ -220,5 +281,28 @@ final class NotchController: ObservableObject {
             width: width,
             height: height
         )
+    }
+}
+
+@MainActor
+final class NotchPanelSelection: ObservableObject {
+    @Published var index = 0
+}
+
+struct NotchExpandedContent: View {
+    @ObservedObject var selection: NotchPanelSelection
+    let timer: TimerModel
+    let battery: BatteryModel
+
+    var body: some View {
+        VStack(spacing: 6) {
+            BatteryAlertBanner(battery: battery)
+
+            if selection.index == 0 {
+                TimerPanel(timer: timer)
+            } else {
+                BatteryPanel(battery: battery)
+            }
+        }
     }
 }

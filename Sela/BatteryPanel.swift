@@ -1,5 +1,71 @@
 import SwiftUI
 
+struct BatteryAlertCard: View {
+    let alert: BatteryAlert
+    let percentage: Int?
+    let conditionText: String
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: alert.symbolName)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(tint)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(alert.message)
+                    .font(.caption.weight(.semibold))
+
+                if let detail {
+                    Text(detail)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10))
+        .accessibilityElement(children: .combine)
+    }
+
+    private var detail: String? {
+        if case .lowBattery = alert { return nil }
+        guard let percentage else { return conditionText }
+        return "\(percentage)% · \(conditionText)"
+    }
+
+    private var tint: Color {
+        switch alert {
+        case .chargerConnected: return .green
+        case .chargerDisconnected: return .secondary
+        case .lowBattery: return .orange
+        }
+    }
+}
+
+struct BatteryAlertBanner: View {
+    @ObservedObject var battery: BatteryModel
+
+    var body: some View {
+        Group {
+            if let alert = battery.alert {
+                BatteryAlertCard(
+                    alert: alert,
+                    percentage: battery.percentage,
+                    conditionText: battery.conditionText
+                )
+                .frame(width: 272)
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: battery.alert)
+    }
+}
+
 struct BatteryPanel: View {
     @ObservedObject var battery: BatteryModel
 
@@ -41,15 +107,6 @@ struct BatteryPanel: View {
             Text("Mengatur pemberitahuan charger dan peringatan baterai rendah.")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
-
-            if let alert = battery.alert {
-                Label(alert.message, systemImage: alert.symbolName)
-                    .font(.caption.weight(.medium))
-                    .padding(8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.yellow.opacity(0.14), in: RoundedRectangle(cornerRadius: 8))
-                    .accessibilityLabel(alert.message)
-            }
         }
         .padding(12)
         .frame(width: 272)

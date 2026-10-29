@@ -9,6 +9,7 @@ struct ContentView: View {
                 panelButton("Timer", panel: 0)
                 panelButton("Baterai", panel: 1)
             }
+            BatteryAlertBanner(battery: notch.battery)
             Group {
                 if notch.selectedPanel == 0 { TimerPanel(timer: notch.timer) }
                 else { BatteryPanel(battery: notch.battery) }
@@ -39,7 +40,7 @@ struct ContentView: View {
                 .monospacedDigit()
         }
         .padding(20)
-        .frame(width: 340, height: 360)
+        .frame(width: 340, height: 430)
     }
 
     @ViewBuilder
