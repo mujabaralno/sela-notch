@@ -7,24 +7,43 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		02162AD998A7636B145D322A /* MusicPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90A0A67967825323D8086FC3 /* MusicPanel.swift */; };
+		0BEC3C7BCB0E6292CA8B559D /* MusicService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A9F0EDF9AEFB654435303F /* MusicService.swift */; };
 		182E5C61E0E69F62D804034A /* BatteryAlertPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F75403A8262C004CD24348 /* BatteryAlertPolicy.swift */; };
 		29DB11595A4253360BE93AE6 /* CompactTimerLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E975E497E23D3541656F8C4 /* CompactTimerLabel.swift */; };
+		3CE57375E48F0E23E426F495 /* DynamicNotchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1E383B038B9D833CC7CA107F /* DynamicNotchKit */; };
 		734AD2B96B2894FE9A310FBC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5620769B923ADA75805EA7F /* ContentView.swift */; };
 		7644BE27627D5FAC7F0813FE /* NotchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8B8A08985E91EE235CF3B55 /* NotchController.swift */; };
 		897BF2CDDF2C4849E8B79E4B /* spritesheet.webp in Resources */ = {isa = PBXBuildFile; fileRef = 51D67F814248899B852A114A /* spritesheet.webp */; };
 		8D7C52573251DAF672C53D91 /* PetSpriteSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27B75199196B6822CFEAB90 /* PetSpriteSheet.swift */; };
 		A386A0A23E6D77FBEB3794B9 /* InteractionAreaReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12513345DEC0382809413ACE /* InteractionAreaReporter.swift */; };
+		A95E23685DBA9654B7E63F66 /* MediaRemoteAdapter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 060AEF3F0F62564214E8E004 /* MediaRemoteAdapter */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C4D9A67BD462100F647CE7F4 /* BatteryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7330C42759C8E95772D55735 /* BatteryModel.swift */; };
+		CB2791B7311F55FF46C30F7E /* MediaRemoteMusicProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC3CC0CD87ECF8BC3CDFC5C8 /* MediaRemoteMusicProvider.swift */; };
 		D25FDE16AD13659B49F6205F /* BatteryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA41BB0ECAF7DEA8DCF1A58 /* BatteryPanel.swift */; };
 		D2D40B261611CA6F88191B33 /* TimerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BAF5D881D995DE17A8BED29 /* TimerPanel.swift */; };
 		D37510F385ACA9113A00E995 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3EFE3978F9DCDE6792F59055 /* Assets.xcassets */; };
 		D879DC8B8B9F4761C5B1D5FD /* TimerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB74DAAF969B7CE2A4D936B1 /* TimerModel.swift */; };
 		DC0DB69731A6D236B9C40522 /* NotchHoverMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F42F21DBF4DF4E9A1E3C9A6 /* NotchHoverMonitor.swift */; };
 		E7008893F4CAD607D0152459 /* pet.json in Resources */ = {isa = PBXBuildFile; fileRef = 113DC693B849181D93878F7A /* pet.json */; };
-		EA0D59BAF6ACA1158D351D61 /* DynamicNotchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1E383B038B9D833CC7CA107F /* DynamicNotchKit */; };
+		EA0D59BAF6ACA1158D351D61 /* MediaRemoteAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 060AEF3F0F62564214E8E004 /* MediaRemoteAdapter */; };
 		F1701CEE690D70BA4E89D6E5 /* PetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6B583E10FAC3213E40E4E9 /* PetView.swift */; };
 		F186862D77EE61F6400FD4DC /* SelaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE540DAB80598BE53C26424F /* SelaApp.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		793DFFCE1466DD81CB6B1BC2 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				A95E23685DBA9654B7E63F66 /* MediaRemoteAdapter in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		0E975E497E23D3541656F8C4 /* CompactTimerLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactTimerLabel.swift; sourceTree = "<group>"; };
@@ -35,9 +54,12 @@
 		1C6B583E10FAC3213E40E4E9 /* PetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetView.swift; sourceTree = "<group>"; };
 		3EFE3978F9DCDE6792F59055 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		51D67F814248899B852A114A /* spritesheet.webp */ = {isa = PBXFileReference; path = spritesheet.webp; sourceTree = "<group>"; };
+		63A9F0EDF9AEFB654435303F /* MusicService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicService.swift; sourceTree = "<group>"; };
 		7330C42759C8E95772D55735 /* BatteryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryModel.swift; sourceTree = "<group>"; };
+		90A0A67967825323D8086FC3 /* MusicPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPanel.swift; sourceTree = "<group>"; };
 		9DA41BB0ECAF7DEA8DCF1A58 /* BatteryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryPanel.swift; sourceTree = "<group>"; };
 		9F42F21DBF4DF4E9A1E3C9A6 /* NotchHoverMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchHoverMonitor.swift; sourceTree = "<group>"; };
+		AC3CC0CD87ECF8BC3CDFC5C8 /* MediaRemoteMusicProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaRemoteMusicProvider.swift; sourceTree = "<group>"; };
 		AD59B033D5DE524B2AC37E98 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		BB74DAAF969B7CE2A4D936B1 /* TimerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerModel.swift; sourceTree = "<group>"; };
 		C27B75199196B6822CFEAB90 /* PetSpriteSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetSpriteSheet.swift; sourceTree = "<group>"; };
@@ -52,7 +74,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EA0D59BAF6ACA1158D351D61 /* DynamicNotchKit in Frameworks */,
+				EA0D59BAF6ACA1158D351D61 /* MediaRemoteAdapter in Frameworks */,
+				3CE57375E48F0E23E426F495 /* DynamicNotchKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +101,7 @@
 		4DC3C69D03DF27C60197E61A /* Sela */ = {
 			isa = PBXGroup;
 			children = (
+				88FDBC51688CC6E8E2AB2AB2 /* Music */,
 				3EFE3978F9DCDE6792F59055 /* Assets.xcassets */,
 				E0F75403A8262C004CD24348 /* BatteryAlertPolicy.swift */,
 				7330C42759C8E95772D55735 /* BatteryModel.swift */,
@@ -95,6 +119,16 @@
 				1BAF5D881D995DE17A8BED29 /* TimerPanel.swift */,
 			);
 			path = Sela;
+			sourceTree = "<group>";
+		};
+		88FDBC51688CC6E8E2AB2AB2 /* Music */ = {
+			isa = PBXGroup;
+			children = (
+				AC3CC0CD87ECF8BC3CDFC5C8 /* MediaRemoteMusicProvider.swift */,
+				90A0A67967825323D8086FC3 /* MusicPanel.swift */,
+				63A9F0EDF9AEFB654435303F /* MusicService.swift */,
+			);
+			path = Music;
 			sourceTree = "<group>";
 		};
 		C36B583651E4CE312CFFD5D4 = {
@@ -125,6 +159,7 @@
 				B7BEB56F534A0B9680EA9A5E /* Sources */,
 				3F35E60509B47A8E5E170F62 /* Resources */,
 				1E2DD1B23871C85E907C2435 /* Frameworks */,
+				793DFFCE1466DD81CB6B1BC2 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -132,6 +167,7 @@
 			);
 			name = Sela;
 			packageProductDependencies = (
+				060AEF3F0F62564214E8E004 /* MediaRemoteAdapter */,
 				1E383B038B9D833CC7CA107F /* DynamicNotchKit */,
 			);
 			productName = Sela;
@@ -163,6 +199,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				DF7B3BF59FE5D5E271F2EF0D /* XCRemoteSwiftPackageReference "DynamicNotchKit" */,
+				D4284506E78F784B798DDE82 /* XCRemoteSwiftPackageReference "mediaremote-adapter" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 226A628E5A9BBD603C2FBA29 /* Products */;
@@ -198,6 +235,9 @@
 				29DB11595A4253360BE93AE6 /* CompactTimerLabel.swift in Sources */,
 				734AD2B96B2894FE9A310FBC /* ContentView.swift in Sources */,
 				A386A0A23E6D77FBEB3794B9 /* InteractionAreaReporter.swift in Sources */,
+				CB2791B7311F55FF46C30F7E /* MediaRemoteMusicProvider.swift in Sources */,
+				02162AD998A7636B145D322A /* MusicPanel.swift in Sources */,
+				0BEC3C7BCB0E6292CA8B559D /* MusicService.swift in Sources */,
 				7644BE27627D5FAC7F0813FE /* NotchController.swift in Sources */,
 				DC0DB69731A6D236B9C40522 /* NotchHoverMonitor.swift in Sources */,
 				8D7C52573251DAF672C53D91 /* PetSpriteSheet.swift in Sources */,
@@ -398,6 +438,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		D4284506E78F784B798DDE82 /* XCRemoteSwiftPackageReference "mediaremote-adapter" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ejbills/mediaremote-adapter";
+			requirement = {
+				kind = revision;
+				revision = 5b6afde3f501a3da567e23bf7f23d562938a1809;
+			};
+		};
 		DF7B3BF59FE5D5E271F2EF0D /* XCRemoteSwiftPackageReference "DynamicNotchKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/MrKai77/DynamicNotchKit";
@@ -409,6 +457,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		060AEF3F0F62564214E8E004 /* MediaRemoteAdapter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D4284506E78F784B798DDE82 /* XCRemoteSwiftPackageReference "mediaremote-adapter" */;
+			productName = MediaRemoteAdapter;
+		};
 		1E383B038B9D833CC7CA107F /* DynamicNotchKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = DF7B3BF59FE5D5E271F2EF0D /* XCRemoteSwiftPackageReference "DynamicNotchKit" */;

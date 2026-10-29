@@ -8,10 +8,12 @@ struct ContentView: View {
             HStack(spacing: 8) {
                 panelButton("Timer", panel: 0)
                 panelButton("Baterai", panel: 1)
+                panelButton("Music", panel: 2)
             }
             BatteryAlertBanner(battery: notch.battery)
             Group {
                 if notch.selectedPanel == 0 { TimerPanel(timer: notch.timer) }
+                else if notch.selectedPanel == 2 { MusicPanel(music: notch.music) }
                 else { BatteryPanel(battery: notch.battery) }
             }
             .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 16))
