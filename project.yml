@@ -9,8 +9,8 @@ options:
 
 packages:
   MediaRemoteAdapter:
-    url: https://github.com/ejbills/mediaremote-adapter
-    revision: 5b6afde3f501a3da567e23bf7f23d562938a1809
+    # Local patch based on pinned upstream revision 5b6afde3f501a3da567e23bf7f23d562938a1809
+    path: Vendor/MediaRemoteAdapter
   DynamicNotchKit:
     url: https://github.com/MrKai77/DynamicNotchKit
     from: 1.1.0
@@ -21,6 +21,8 @@ targets:
     platform: macOS
     sources:
       - path: Sela
+      - path: Vendor/MediaRemoteAdapter/LICENSE
+        buildPhase: resources
       - path: public/pet-pomodoro
         buildPhase: resources
     dependencies:

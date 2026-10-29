@@ -28,15 +28,20 @@ struct MusicPanel: View {
                     }
                 }
                 HStack(spacing: 24) {
-                    Button { music.send(.previous) } label: { Image(systemName: "backward.end.fill") }
-                        .disabled(!media.canSkip).accessibilityLabel("Previous")
-                    Button { music.send(.toggle) } label: { Image(systemName: media.playing ? "pause.fill" : "play.fill") }
+                    Button { music.send(.previous, expectedToken: media.sessionToken) } label: { Image(systemName: "backward.end.fill") }
+                        .disabled(!media.supports(.previous)).accessibilityLabel("Previous")
+                    Button { music.send(.toggle, expectedToken: media.sessionToken) } label: { Image(systemName: media.playing ? "pause.fill" : "play.fill") }
+                        .disabled(!media.supports(.toggle))
                         .accessibilityLabel(media.playing ? "Pause" : "Play")
-                    Button { music.send(.next) } label: { Image(systemName: "forward.end.fill") }
-                        .disabled(!media.canSkip).accessibilityLabel("Next")
+                    Button { music.send(.next, expectedToken: media.sessionToken) } label: { Image(systemName: "forward.end.fill") }
+                        .disabled(!media.supports(.next)).accessibilityLabel("Next")
                 }
-                if !media.canSkip {
-                    Text("Previous / Next belum tersedia dari sumber ini.").font(.caption).foregroundStyle(.secondary)
+                if !media.capabilitiesKnown {
+                    Text("Kemampuan kontrol tidak tersedia melalui adapter pada macOS ini.")
+                        .font(.caption).foregroundStyle(.secondary)
+                } else if !media.supports(.previous) || !media.supports(.next) {
+                    Text("Sumber aktif tidak mengaktifkan " +
+                         ([(!media.supports(.previous) ? "Previous" : nil), (!media.supports(.next) ? "Next" : nil)].compactMap { $0 }.joined(separator: " / ")) + ".").font(.caption).foregroundStyle(.secondary)
                 }
             } else {
                 Image(systemName: "music.note")
