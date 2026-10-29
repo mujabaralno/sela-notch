@@ -7,3 +7,4 @@ DerivedData/
 xcuserdata/
 *.xcuserstate
 .swiftpm/
+AGENTS.md

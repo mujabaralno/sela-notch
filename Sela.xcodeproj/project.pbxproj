@@ -7,17 +7,23 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		29DB11595A4253360BE93AE6 /* CompactTimerLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E975E497E23D3541656F8C4 /* CompactTimerLabel.swift */; };
 		734AD2B96B2894FE9A310FBC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5620769B923ADA75805EA7F /* ContentView.swift */; };
 		7644BE27627D5FAC7F0813FE /* NotchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8B8A08985E91EE235CF3B55 /* NotchController.swift */; };
-		A00B0637790A3F56B0B95878 /* NotchContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D17F09820F5FD7F61067CC /* NotchContent.swift */; };
+		D2D40B261611CA6F88191B33 /* TimerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BAF5D881D995DE17A8BED29 /* TimerPanel.swift */; };
+		D37510F385ACA9113A00E995 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3EFE3978F9DCDE6792F59055 /* Assets.xcassets */; };
+		D879DC8B8B9F4761C5B1D5FD /* TimerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB74DAAF969B7CE2A4D936B1 /* TimerModel.swift */; };
 		EA0D59BAF6ACA1158D351D61 /* DynamicNotchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1E383B038B9D833CC7CA107F /* DynamicNotchKit */; };
 		F186862D77EE61F6400FD4DC /* SelaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE540DAB80598BE53C26424F /* SelaApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0E975E497E23D3541656F8C4 /* CompactTimerLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactTimerLabel.swift; sourceTree = "<group>"; };
 		18A59EFBD6EC6088AC45F2FD /* Sela.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sela.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		20D17F09820F5FD7F61067CC /* NotchContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchContent.swift; sourceTree = "<group>"; };
+		1BAF5D881D995DE17A8BED29 /* TimerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerPanel.swift; sourceTree = "<group>"; };
+		3EFE3978F9DCDE6792F59055 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AD59B033D5DE524B2AC37E98 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		BB74DAAF969B7CE2A4D936B1 /* TimerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerModel.swift; sourceTree = "<group>"; };
 		CE540DAB80598BE53C26424F /* SelaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelaApp.swift; sourceTree = "<group>"; };
 		E5620769B923ADA75805EA7F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		F8B8A08985E91EE235CF3B55 /* NotchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchController.swift; sourceTree = "<group>"; };
@@ -46,11 +52,14 @@
 		4DC3C69D03DF27C60197E61A /* Sela */ = {
 			isa = PBXGroup;
 			children = (
+				3EFE3978F9DCDE6792F59055 /* Assets.xcassets */,
+				0E975E497E23D3541656F8C4 /* CompactTimerLabel.swift */,
 				E5620769B923ADA75805EA7F /* ContentView.swift */,
 				AD59B033D5DE524B2AC37E98 /* Info.plist */,
-				20D17F09820F5FD7F61067CC /* NotchContent.swift */,
 				F8B8A08985E91EE235CF3B55 /* NotchController.swift */,
 				CE540DAB80598BE53C26424F /* SelaApp.swift */,
+				BB74DAAF969B7CE2A4D936B1 /* TimerModel.swift */,
+				1BAF5D881D995DE17A8BED29 /* TimerPanel.swift */,
 			);
 			path = Sela;
 			sourceTree = "<group>";
@@ -71,6 +80,7 @@
 			buildConfigurationList = 1ACD88F8AB07334DD6AB7C66 /* Build configuration list for PBXNativeTarget "Sela" */;
 			buildPhases = (
 				B7BEB56F534A0B9680EA9A5E /* Sources */,
+				3F35E60509B47A8E5E170F62 /* Resources */,
 				1E2DD1B23871C85E907C2435 /* Frameworks */,
 			);
 			buildRules = (
@@ -121,15 +131,28 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		3F35E60509B47A8E5E170F62 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D37510F385ACA9113A00E995 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		B7BEB56F534A0B9680EA9A5E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				29DB11595A4253360BE93AE6 /* CompactTimerLabel.swift in Sources */,
 				734AD2B96B2894FE9A310FBC /* ContentView.swift in Sources */,
-				A00B0637790A3F56B0B95878 /* NotchContent.swift in Sources */,
 				7644BE27627D5FAC7F0813FE /* NotchController.swift in Sources */,
 				F186862D77EE61F6400FD4DC /* SelaApp.swift in Sources */,
+				D879DC8B8B9F4761C5B1D5FD /* TimerModel.swift in Sources */,
+				D2D40B261611CA6F88191B33 /* TimerPanel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
