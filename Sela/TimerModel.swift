@@ -65,6 +65,10 @@ final class TimerModel: ObservableObject {
         phase != .idle
     }
 
+    var isActive: Bool {
+        phase == .running
+    }
+
     func select(_ session: Session) {
         guard session != self.session else { return }
         stopTicker()

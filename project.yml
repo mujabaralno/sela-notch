@@ -18,6 +18,8 @@ targets:
     platform: macOS
     sources:
       - path: Sela
+      - path: public/pet-pomodoro
+        buildPhase: resources
     dependencies:
       - package: DynamicNotchKit
     info:
