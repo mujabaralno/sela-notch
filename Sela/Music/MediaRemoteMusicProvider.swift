@@ -49,6 +49,7 @@ final class MediaRemoteMusicProvider: MusicProvider {
                         self?.receive(line)
                     }
                 } catch {
+                    guard !Task.isCancelled, self?.process === child else { return }
                     self?.onUpdate?(nil, true)
                 }
             }
@@ -69,21 +70,19 @@ final class MediaRemoteMusicProvider: MusicProvider {
         }
         let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
         let payload = object?["payload"] as? [String: Any]
-        let canSkip = (payload?["prohibitsSkip"] as? Bool) == false
+        let token = payload?["sessionToken"] as? String ?? ""
+        let known = payload?["capabilitiesKnown"] as? Bool ?? false
+        let enabled = Set(payload?["enabledCommands"] as? [Int] ?? [])
         onUpdate?(MusicSnapshot(title: p.title, artist: p.artist,
                                 source: p.applicationName ?? p.bundleIdentifier,
-                                playing: p.isPlaying == true, artwork: p.artwork, canSkip: canSkip), false)
+                                playing: p.isPlaying == true, artwork: p.artwork, sessionToken: token, capabilitiesKnown: known, enabledCommands: enabled), false)
     }
 
-    func send(_ command: MusicCommand) {
-        guard process?.isRunning == true, let input else { return }
-        let name: String
-        switch command {
-        case .toggle: name = "toggle_play_pause"
-        case .previous: name = "previous_track"
-        case .next: name = "next_track"
-        }
-        do { try input.fileHandleForWriting.write(contentsOf: Data((name + "\n").utf8)) }
+    func send(_ command: MusicCommand, snapshot: MusicSnapshot) {
+        guard process?.isRunning == true, let input, snapshot.supports(command),
+              UUID(uuidString: snapshot.sessionToken) != nil else { return }
+        let line = "guarded \(snapshot.sessionToken) \(snapshot.commandID(command))\n"
+        do { try input.fileHandleForWriting.write(contentsOf: Data(line.utf8)) }
         catch { onUpdate?(nil, true) }
     }
 

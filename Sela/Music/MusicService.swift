@@ -7,8 +7,22 @@ struct MusicSnapshot {
     var source: String?
     var playing: Bool
     var artwork: NSImage?
-    // Unknown capabilities stay disabled rather than promising unsupported skips.
-    var canSkip = false
+    var sessionToken: String = ""
+    var capabilitiesKnown = false
+    var enabledCommands: Set<Int> = []
+
+    func commandID(_ command: MusicCommand) -> Int {
+        switch command {
+        case .previous: return 5
+        case .next: return 4
+        case .toggle:
+            if enabledCommands.contains(2) { return 2 }
+            return playing ? 1 : 0
+        }
+    }
+    func supports(_ command: MusicCommand) -> Bool {
+        capabilitiesKnown && !sessionToken.isEmpty && enabledCommands.contains(commandID(command))
+    }
 }
 
 enum MusicCommand { case toggle, previous, next }
@@ -18,7 +32,7 @@ protocol MusicProvider: AnyObject {
     var onUpdate: ((MusicSnapshot?, Bool) -> Void)? { get set }
     func start()
     func stop()
-    func send(_ command: MusicCommand)
+    func send(_ command: MusicCommand, snapshot: MusicSnapshot)
 }
 
 @MainActor
@@ -45,9 +59,9 @@ final class MusicService: ObservableObject {
         provider.stop()
         snapshot = nil
     }
-    func send(_ command: MusicCommand) {
-        guard !unavailable, let snapshot else { return }
-        if command != .toggle && !snapshot.canSkip { return }
-        provider.send(command)
+    func send(_ command: MusicCommand, expectedToken: String) {
+        guard !unavailable, let snapshot, snapshot.sessionToken == expectedToken else { return }
+        guard snapshot.supports(command) else { return }
+        provider.send(command, snapshot: snapshot)
     }
 }
