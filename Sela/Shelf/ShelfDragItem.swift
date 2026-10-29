@@ -40,9 +40,9 @@ final class ShelfFileView: NSView, NSDraggingSource {
     }
     override func layout() {
         super.layout()
-        image.frame = NSRect(x: 0, y: 34, width: 36, height: 36)
-        title.frame = NSRect(x: 0, y: 16, width: bounds.width, height: 16)
-        status.frame = NSRect(x: 0, y: 0, width: bounds.width, height: 16)
+        image.frame = NSRect(x: 0, y: 8, width: 24, height: 24)
+        title.frame = NSRect(x: 32, y: 20, width: max(0, bounds.width - 32), height: 16)
+        status.frame = NSRect(x: 32, y: 4, width: max(0, bounds.width - 32), height: 16)
     }
     override func hitTest(_ point: NSPoint) -> NSView? { bounds.contains(point) ? self : nil }
     override func mouseDown(with event: NSEvent) { }
@@ -51,7 +51,7 @@ final class ShelfFileView: NSView, NSDraggingSource {
             shelf.refreshAvailability(); return
         }
         let dragItem = NSDraggingItem(pasteboardWriter: item.url as NSURL)
-        dragItem.setDraggingFrame(NSRect(x: 0, y: 34, width: 36, height: 36), contents: image.image)
+        dragItem.setDraggingFrame(image.frame, contents: image.image)
         shelf.outgoingDrag = true
         let session = beginDraggingSession(with: [dragItem], event: event, source: self)
         session.animatesToStartingPositionsOnCancelOrFail = true

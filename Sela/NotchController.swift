@@ -301,11 +301,16 @@ struct NotchExpandedContent: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
-        ShelfDropContainer(shelf: shelf) { content }
+        ShelfDropContainer(shelf: shelf) {
+            content.frame(width: SelaTheme.width, height: contentHeight, alignment: .top)
+        }
             .onChange(of: shelf.targeted) { targeted in
                 if targeted && !shelf.outgoingDrag { selection.index = 3 }
             }
-            .frame(width: SelaTheme.width, height: selection.index == 3 ? (shelf.items.isEmpty ? 240 : 352) + (shelf.message == nil ? 0 : 40) : 188)
+            .frame(width: SelaTheme.width, height: contentHeight)
+    }
+    private var contentHeight: CGFloat {
+        selection.index == 3 ? ShelfLayout.panelHeight(itemCount: shelf.items.count, hasMessage: shelf.message != nil) : 188
     }
     private var content: some View {
         VStack(spacing: 12) {
