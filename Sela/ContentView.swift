@@ -5,8 +5,15 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 18) {
-            TimerPanel(timer: notch.timer)
-                .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 16))
+            HStack(spacing: 8) {
+                panelButton("Timer", panel: 0)
+                panelButton("Baterai", panel: 1)
+            }
+            Group {
+                if notch.selectedPanel == 0 { TimerPanel(timer: notch.timer) }
+                else { BatteryPanel(battery: notch.battery) }
+            }
+            .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 16))
 
             HStack(spacing: 12) {
                 Button("Tampilkan Notch") {
@@ -32,7 +39,18 @@ struct ContentView: View {
                 .monospacedDigit()
         }
         .padding(20)
-        .frame(width: 340, height: 300)
+        .frame(width: 340, height: 360)
+    }
+
+    @ViewBuilder
+    private func panelButton(_ title: String, panel: Int) -> some View {
+        if notch.selectedPanel == panel {
+            Button(title) { notch.selectedPanel = panel }
+                .buttonStyle(.borderedProminent)
+        } else {
+            Button(title) { notch.selectedPanel = panel }
+                .buttonStyle(.bordered)
+        }
     }
 }
 

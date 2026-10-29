@@ -1,3 +1,4 @@
+import Combine
 import DynamicNotchKit
 import SwiftUI
 
@@ -12,25 +13,45 @@ final class NotchController: ObservableObject {
     @Published private(set) var status: Status = .hidden
 
     let timer = TimerModel()
+    let battery = BatteryModel()
+    @Published var selectedPanel = 0
 
     private static let openDwell: TimeInterval = 0.12
     private static let closeGrace: TimeInterval = 0.5
 
     private lazy var notch = DynamicNotch(style: .auto) {
         AnyView(
-            TimerPanel(timer: self.timer)
+            VStack(spacing: 6) {
+                Group {
+                    if self.selectedPanel == 0 { TimerPanel(timer: self.timer) }
+                    else { BatteryPanel(battery: self.battery) }
+                }
+
+                if let alert = self.battery.alert {
+                    Label(alert.message, systemImage: alert.symbolName)
+                        .font(.caption.weight(.medium))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(.regularMaterial, in: Capsule())
+                        .transition(.opacity)
+                        .accessibilityLabel(alert.message)
+                }
+            }
+            .animation(.easeInOut(duration: 0.2), value: self.battery.alert)
                 .reportsInteractionArea { self.updatePanelRect($0) }
         )
     } compactLeading: {
         AnyView(PetView(timer: self.timer, height: 16))
     } compactTrailing: {
-        AnyView(CompactTimerLabel(timer: self.timer))
+        AnyView(CompactStatusLabel(timer: self.timer, battery: self.battery))
     }
 
     private let hoverMonitor = NotchHoverMonitor()
+    private var cancellables = Set<AnyCancellable>()
     private var isExpanded = false
     private var isTransitioning = false
     private var enteredSinceOpen = false
+    private var alertCompactActive = false
     private var enterDate: Date?
     private var leaveDate: Date?
     private var panelRect: CGRect = .null
@@ -40,6 +61,14 @@ final class NotchController: ObservableObject {
             self?.handleMouse(at: point)
         }
         hoverMonitor.start()
+
+        battery.$alert
+            .sink { [weak self] alert in
+                Task { @MainActor in
+                    self?.handleBatteryAlert(alert)
+                }
+            }
+            .store(in: &cancellables)
     }
 
     func expand() {
@@ -48,6 +77,7 @@ final class NotchController: ObservableObject {
         isTransitioning = true
         isExpanded = true
         enteredSinceOpen = false
+        alertCompactActive = false
         enterDate = nil
         leaveDate = nil
         status = .expanded
@@ -81,6 +111,7 @@ final class NotchController: ObservableObject {
         isTransitioning = true
         isExpanded = false
         enteredSinceOpen = false
+        alertCompactActive = false
         enterDate = nil
         leaveDate = nil
         panelRect = .null
@@ -117,6 +148,15 @@ final class NotchController: ObservableObject {
 
         enterDate = nil
 
+        if !isExpanded, alertCompactActive, status == .compact {
+            if battery.alert == nil {
+                alertCompactActive = false
+                if !timer.isActive { hide() }
+            }
+            leaveDate = nil
+            return
+        }
+
         guard isExpanded, enteredSinceOpen else {
             leaveDate = nil
             return
@@ -135,6 +175,13 @@ final class NotchController: ObservableObject {
         } else {
             hide()
         }
+    }
+
+    private func handleBatteryAlert(_ alert: BatteryAlert?) {
+        guard alert != nil, status == .hidden, !isTransitioning else { return }
+
+        alertCompactActive = true
+        compact()
     }
 
     private func updatePanelRect(_ frame: CGRect, attempt: Int = 0) {

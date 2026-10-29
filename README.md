@@ -41,6 +41,23 @@ dengan `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` di depannya.
 - Timer berjalan di level aplikasi, jadi tetap berjalan ketika panel ditutup.
 - Saat waktu habis, alarm berbunyi sekali dan status berubah menjadi **Selesai**.
 
+## Baterai & charger
+
+- Panel **Baterai** menampilkan persentase, kondisi (menggunakan baterai, sedang
+  mengisi, atau terhubung ke charger tetapi tidak mengisi), dan tombol refresh.
+- `BatteryModel` membaca data dari IOKit dan mendengarkan notifikasi perubahan
+  sumber daya, dengan polling 15 detik sebagai cadangan.
+- Memasang atau melepas charger menampilkan pemberitahuan singkat di notch tanpa
+  mengganti tab atau menghentikan timer. Jika notch sedang tersembunyi, tampilan
+  ringkas muncul sebentar lalu kembali tersembunyi.
+- Baterai 20% atau lebih rendah saat tidak terhubung ke charger memunculkan
+  peringatan satu kali sampai baterai pulih di atas 20%.
+- **Battery Alerts** di panel Baterai mengatur kedua jenis pemberitahuan tersebut
+  dan pilihannya disimpan lewat `UserDefaults`. Status baterai tetap diperbarui
+  ketika pemberitahuan dimatikan.
+- Aturan pemberitahuan berada di `BatteryAlertPolicy` (tanpa AppKit) sehingga dapat
+  diuji dengan data contoh: `bash Tests/run-battery-tests.sh`.
+
 ## Interaksi notch
 
 - Mengarahkan kursor ke area kamera/notch membuka panel tanpa klik.
@@ -77,9 +94,12 @@ Sela/
   NotchController.swift       pembungkus DynamicNotch dan aturan hover
   NotchHoverMonitor.swift     polling posisi kursor untuk area kamera
   InteractionAreaReporter.swift  pelaporan area panel yang benar-benar dirender
+  BatteryModel.swift          status baterai dan pemantauan sumber daya
+  BatteryAlertPolicy.swift    aturan pemberitahuan charger dan baterai rendah
+  BatteryPanel.swift          tampilan panel baterai
   TimerModel.swift            status dan hitung mundur sesi fokus/istirahat
   TimerPanel.swift            tampilan panel timer
-  CompactTimerLabel.swift     sisa waktu pada tampilan ringkas notch
+  CompactTimerLabel.swift     teks tampilan ringkas notch (waktu atau pemberitahuan)
   PetSpriteSheet.swift        pemuat pet.json dan pemotongan frame pet
   PetView.swift               animasi pet di panel
   Assets.xcassets/            ikon aplikasi
