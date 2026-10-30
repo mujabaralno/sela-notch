@@ -131,3 +131,22 @@ user's manual tab choice.
   and quiet secondary controls. Its height is 264 pt to fit the scrolling agenda.
 - Synthetic provider and agenda/link tests cover the feature. Real permission dialogs
   and personal calendar data were not used and remain manual verification.
+
+## Inbox · 30 October 2026
+
+Inbox is added as the sixth navigation item (Timer, Baterai, Music, Calendar, Shelf,
+Inbox). It is experimental and disabled by default.
+
+- Live banner capture is opt-in. Enabling the feature does not prompt for
+  Accessibility; the explicit Allow button does. The observer reads only Notification
+  Center banner/alert windows and copies exposed text into memory.
+- Source selection, pause/resume, disable, clear history, an open-source action, and
+  the existing simulation/`notchapp://notify` path are available. No source is
+  selected by default; enabling without a source asks the user to choose one.
+  Hidden previews and restricted notification states are not forced open.
+- Inbox content is 400 pt to fit controls, permission state, and a scrolling list.
+  New unread items add a compact bell/count indicator after battery and before Shelf;
+  they do not change the selected tab, timer, or drag/drop state.
+- Real WhatsApp, Telegram, and Messages banner capture has not been verified. The
+  feature remains marked experimental; the per-app result table and manual protocol
+  live in `Tests/InboxValidation.md`.

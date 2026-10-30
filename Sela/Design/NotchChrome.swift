@@ -6,6 +6,7 @@ enum SelaPanel: Int, CaseIterable {
     case music
     case calendar
     case shelf
+    case inbox
 }
 
 struct SelaNavigation: View {
@@ -18,6 +19,7 @@ struct SelaNavigation: View {
         (.music, "Music", "music.note"),
         (.calendar, "Calendar", "calendar"),
         (.shelf, "Shelf", "tray"),
+        (.inbox, "Inbox", "tray.full"),
     ]
     var body: some View {
         HStack(spacing: 4) {
@@ -48,13 +50,14 @@ struct SelaNavigation: View {
 
 /// Presentation priority only; no feature model is changed by choosing an activity.
 enum SelaLiveActivity {
-    case alarm, timer, music, battery, shelf, idle
-    @MainActor static func resolve(timer: TimerModel, battery: BatteryModel, music: MusicService, shelf: ShelfService? = nil) -> Self {
-        // alarm > running/paused timer > playing music > battery event/low > idle
+    case alarm, timer, music, battery, inbox, shelf, idle
+    @MainActor static func resolve(timer: TimerModel, battery: BatteryModel, music: MusicService, shelf: ShelfService? = nil, inbox: InboxService? = nil) -> Self {
+        // alarm > running/paused timer > playing music > battery event/low > unread inbox > shelf > idle
         if timer.phase == .finished { return .alarm }
         if timer.showsCompactTime { return .timer }
         if music.snapshot != nil { return .music }
         if battery.alert != nil || (battery.alertsEnabled && battery.condition == .onBattery && (battery.percentage ?? 100) <= BatteryAlertPolicy.lowBatteryThreshold) { return .battery }
+        if let inbox, inbox.unreadCount > 0 { return .inbox }
         if let shelf, !shelf.items.isEmpty { return .shelf }
         return .idle
     }
@@ -79,10 +82,11 @@ struct SelaCompactWing: View {
     @ObservedObject var battery: BatteryModel
     @ObservedObject var music: MusicService
     @ObservedObject var shelf: ShelfService
+    @ObservedObject var inbox: InboxService
     var leading: Bool
     var body: some View {
         Group {
-            switch SelaLiveActivity.resolve(timer: timer, battery: battery, music: music, shelf: shelf) {
+            switch SelaLiveActivity.resolve(timer: timer, battery: battery, music: music, shelf: shelf, inbox: inbox) {
             case .alarm:
                 if leading { SelaAlarmSymbol() }
                 else { Text("Selesai").foregroundStyle(SelaTheme.amber) }
@@ -96,6 +100,9 @@ struct SelaCompactWing: View {
             case .battery:
                 if leading { Image(systemName: battery.alert?.symbolName ?? "battery.25").foregroundStyle((battery.percentage ?? 100) <= BatteryAlertPolicy.lowBatteryThreshold ? SelaTheme.amber : SelaTheme.green) }
                 else { Text(battery.percentage.map { "\($0)%" } ?? "—").monospacedDigit() }
+            case .inbox:
+                if leading { Image(systemName: "bell.badge.fill").foregroundStyle(SelaTheme.amber) }
+                else { Text("\(inbox.unreadCount)").monospacedDigit() }
             case .shelf:
                 if leading { Image(systemName: "tray.fill") }
                 else { Text("\(shelf.items.count)").monospacedDigit() }
