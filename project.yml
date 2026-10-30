@@ -40,6 +40,10 @@ targets:
         NSHumanReadableCopyright: ""
         NSCalendarsUsageDescription: Sela membaca kalender di Mac untuk menampilkan agenda tujuh hari dan tautan meeting. Sela tidak membuat, mengubah, atau menghapus acara.
         NSCalendarsFullAccessUsageDescription: Sela membaca kalender di Mac untuk menampilkan agenda tujuh hari dan tautan meeting. Sela tidak membuat, mengubah, atau menghapus acara.
+        CFBundleURLTypes:
+          - CFBundleURLName: com.mujabaralno.sela
+            CFBundleURLSchemes:
+              - notchapp
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mujabaralno.sela

@@ -16,6 +16,7 @@ final class NotchController: ObservableObject {
     private var dragObservation = ShelfDragObservation()
     let music = MusicService(provider: MediaRemoteMusicProvider())
     let calendar = CalendarService(provider: EventKitCalendarProvider())
+    let inbox = InboxService.shared
     let timer = TimerModel()
     let battery = BatteryModel()
     let selection = NotchPanelSelection()
@@ -34,14 +35,15 @@ final class NotchController: ObservableObject {
                 battery: self.battery,
                 music: self.music,
                 shelf: self.shelf,
-                calendar: self.calendar
+                calendar: self.calendar,
+                inbox: self.inbox
             )
             .reportsInteractionArea { self.updatePanelRect($0) }
         )
     } compactLeading: {
-        AnyView(SelaCompactWing(timer: self.timer, battery: self.battery, music: self.music, shelf: self.shelf, leading: true))
+        AnyView(SelaCompactWing(timer: self.timer, battery: self.battery, music: self.music, shelf: self.shelf, inbox: self.inbox, leading: true))
     } compactTrailing: {
-        AnyView(SelaCompactWing(timer: self.timer, battery: self.battery, music: self.music, shelf: self.shelf, leading: false))
+        AnyView(SelaCompactWing(timer: self.timer, battery: self.battery, music: self.music, shelf: self.shelf, inbox: self.inbox, leading: false))
     }
 
     private let hoverMonitor = NotchHoverMonitor()
@@ -65,6 +67,9 @@ final class NotchController: ObservableObject {
         shelf.$items.sink { [weak self] _ in
             Task { @MainActor in self?.refreshCompact() }
         }.store(in: &cancellables)
+        inbox.$items.sink { [weak self] _ in
+            Task { @MainActor in self?.refreshCompact() }
+        }.store(in: &cancellables)
         NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)
             .sink { [weak self] _ in
                 MainActor.assumeIsolated {
@@ -75,8 +80,11 @@ final class NotchController: ObservableObject {
         selection.$index
             .removeDuplicates()
             .sink { [weak self] index in
-                guard index == SelaPanel.calendar.rawValue else { return }
-                Task { @MainActor in await self?.calendar.refresh() }
+                Task { @MainActor in
+                    guard let self else { return }
+                    if index == SelaPanel.calendar.rawValue { await self.calendar.refresh() }
+                    if index == SelaPanel.inbox.rawValue { self.inbox.markAllRead() }
+                }
             }.store(in: &cancellables)
         music.$snapshot.sink { [weak self] _ in
             Task { @MainActor in self?.refreshCompact() }
@@ -98,7 +106,7 @@ final class NotchController: ObservableObject {
         guard !isExpanded, !shelf.isBusy else { return }
         guard !isTransitioning else { compactRefreshPending = true; return }
         compactRefreshPending = false
-        if SelaLiveActivity.resolve(timer: timer, battery: battery, music: music, shelf: shelf) != .idle { compact() }
+        if SelaLiveActivity.resolve(timer: timer, battery: battery, music: music, shelf: shelf, inbox: inbox) != .idle { compact() }
         else { hide() }
     }
 
@@ -127,7 +135,7 @@ final class NotchController: ObservableObject {
                 await notch.expand(on: screen)
             } else {
                 await notch.hide()
-                floatingPanel.show(content: AnyView(NotchExpandedContent(selection: selection, timer: timer, battery: battery, music: music, shelf: shelf, calendar: calendar)
+                floatingPanel.show(content: AnyView(NotchExpandedContent(selection: selection, timer: timer, battery: battery, music: music, shelf: shelf, calendar: calendar, inbox: inbox)
                     .clipShape(RoundedRectangle(cornerRadius: SelaTheme.radius))), screen: screen)
                 panelRect = floatingPanel.frame
             }
@@ -156,8 +164,8 @@ final class NotchController: ObservableObject {
             } else {
                 await notch.hide()
                 floatingPanel.show(content: AnyView(HStack(spacing: 16) {
-                    SelaCompactWing(timer: timer, battery: battery, music: music, shelf: shelf, leading: true)
-                    SelaCompactWing(timer: timer, battery: battery, music: music, shelf: shelf, leading: false)
+                    SelaCompactWing(timer: timer, battery: battery, music: music, shelf: shelf, inbox: inbox, leading: true)
+                    SelaCompactWing(timer: timer, battery: battery, music: music, shelf: shelf, inbox: inbox, leading: false)
                 }.padding(.horizontal, 16).frame(width: 112, height: 36).selaSurface().clipShape(Capsule())), screen: screen)
                 panelRect = floatingPanel.frame
             }
@@ -240,7 +248,7 @@ final class NotchController: ObservableObject {
         guard Date().timeIntervalSince(leftAt) >= Self.closeGrace else { return }
 
         leaveDate = nil
-        if SelaLiveActivity.resolve(timer: timer, battery: battery, music: music, shelf: shelf) != .idle {
+        if SelaLiveActivity.resolve(timer: timer, battery: battery, music: music, shelf: shelf, inbox: inbox) != .idle {
             compact()
         } else {
             hide()
@@ -331,6 +339,7 @@ struct NotchExpandedContent: View {
     let music: MusicService
     @ObservedObject var shelf: ShelfService
     let calendar: CalendarService
+    let inbox: InboxService
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
@@ -348,6 +357,8 @@ struct NotchExpandedContent: View {
             ShelfLayout.panelHeight(itemCount: shelf.items.count, hasMessage: shelf.message != nil)
         case .calendar:
             CalendarLayout.contentHeight
+        case .inbox:
+            InboxLayout.contentHeight
         default:
             188
         }
@@ -359,6 +370,7 @@ struct NotchExpandedContent: View {
                 switch SelaPanel(rawValue: selection.index) {
                 case .shelf: ShelfPanel(shelf: shelf)
                 case .calendar: CalendarPanel(calendar: calendar)
+                case .inbox: InboxPanel(inbox: inbox)
                 case .music: MusicPanel(music: music)
                 case .timer: TimerPanel(timer: timer)
                 case .battery, .none: BatteryPanel(battery: battery)

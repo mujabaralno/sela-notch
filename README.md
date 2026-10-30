@@ -80,6 +80,30 @@ dengan `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` di depannya.
   membawa objek `EKEvent` keluar actor.
 - Tes memakai provider dan acara sintetis: `bash Tests/run-calendar-tests.sh`.
 
+## Inbox (eksperimental)
+
+- Inbox bersifat opsional dan nonaktif setiap aplikasi dijalankan. Menyalakan
+  **Baca banner aplikasi lain** tidak langsung meminta izin; tombol
+  **Izinkan akses Accessibility** adalah satu-satunya jalur permintaan izin.
+- Pengguna memilih WhatsApp, Telegram, dan/atau Messages; tidak ada sumber yang
+  dipilih secara default. Pengguna dapat menjeda, melanjutkan, atau mematikan
+  pembacaan. Membuka Inbox atau startup tidak memunculkan prompt.
+- Sela hanya menyalin teks banner/alert Notification Center yang terlihat. Pratinjau
+  tersembunyi, layar terkunci, dan Focus tidak dipaksa dibaca; jika teks tidak
+  tersedia, Inbox menampilkan "Pratinjau tidak tersedia". Tidak ada screenshot, OCR,
+  database aplikasi, atau isi percakapan.
+- Item hanya berada di memori, tanpa log, disk, analytics, atau jaringan. Hapus
+  riwayat Inbox tidak mengubah notifikasi sistem atau pesan asli. Tombol **Buka**
+  hanya membuka aplikasi sumber, bukan percakapan tertentu.
+- Notifikasi baru menampilkan indikator lonceng dan jumlah di tampilan ringkas tanpa
+  mengganti tab, menghentikan timer, atau mengganggu drag/drop. Membuka tab Inbox
+  menandai item sebagai dibaca.
+- Jalur simulasi tetap tersedia lewat tombol tambah atau
+  `open "notchapp://notify?title=Notifikasi%20uji&body=Contoh%20isi"`.
+- Pembacaan banner nyata belum terverifikasi dan bergantung pada versi macOS/aplikasi.
+  Status per aplikasi dan protokol uji ada di `Tests/InboxValidation.md`.
+- Tes sintetis: `bash Tests/run-inbox-tests.sh`.
+
 ## Interaksi notch
 
 - Mengarahkan kursor ke area kamera/notch membuka panel tanpa klik.
@@ -113,6 +137,7 @@ project.yml                   definisi project untuk XcodeGen
 Sela.xcodeproj                project Xcode hasil generate
 Sela/
   SelaApp.swift               entry point aplikasi
+  AppDelegate.swift           penanganan URL notchapp://notify
   ContentView.swift           jendela utama
   NotchController.swift       pembungkus DynamicNotch dan aturan hover
   NotchHoverMonitor.swift     polling posisi kursor untuk area kamera
@@ -124,6 +149,10 @@ Sela/
   Calendar/CalendarService.swift   status akses dan pembaruan agenda
   Calendar/EventKitCalendarProvider.swift  provider EventKit read-only
   Calendar/CalendarPanel.swift     tampilan agenda dan tautan acara
+  Inbox/InboxModels.swift     model Inbox, sumber, dan URL simulasi
+  Inbox/InboxService.swift    riwayat memori, filter, jeda, dan kontrol izin
+  Inbox/AccessibilityBannerObserver.swift  pembacaan banner eksperimental
+  Inbox/InboxPanel.swift      tampilan Inbox dan kontrol eksperimen
   TimerModel.swift            status dan hitung mundur sesi fokus/istirahat
   TimerPanel.swift            tampilan panel timer
   CompactTimerLabel.swift     teks tampilan ringkas notch (waktu atau pemberitahuan)
@@ -147,6 +176,9 @@ public/pet-pomodoro/          aset pet (pet.json + spritesheet), ikut ke bundle
 - Tab Calendar memakai `CalendarService` dengan provider EventKit read-only. Query
   berjalan di actor, sementara service mengatur status izin, refresh, dan snapshot
   agenda yang aman dipakai SwiftUI.
+- Tab Inbox memakai `InboxService` bersama. Pembacaan banner eksperimental berada di
+  `AccessibilityBannerObserver`; `AppDelegate` merutekan `notchapp://notify` ke
+  Inbox tanpa memerlukan izin Accessibility.
 - Aksi tombol memanggil API async bawaan library: `expand()`, `compact()`, dan `hide()`.
 - `NotchHoverMonitor` memantau posisi kursor tiap 80 ms, sedangkan
   `InteractionAreaReporter` melaporkan area panel yang benar-benar dirender agar

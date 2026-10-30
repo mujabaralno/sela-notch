@@ -9,7 +9,7 @@ struct ContentView: View {
                 Spacer()
                 Text("Di sela aktivitas Anda").font(.system(size: 11)).selaSecondary()
             }
-            NotchExpandedContent(selection: notch.selection, timer: notch.timer, battery: notch.battery, music: notch.music, shelf: notch.shelf, calendar: notch.calendar)
+            NotchExpandedContent(selection: notch.selection, timer: notch.timer, battery: notch.battery, music: notch.music, shelf: notch.shelf, calendar: notch.calendar, inbox: notch.inbox)
                 .clipShape(RoundedRectangle(cornerRadius: 24))
             HStack(spacing: 8) {
                 Button("Buka notch") { notch.expand() }.buttonStyle(SelaButtonStyle(prominent: true)).keyboardShortcut(.defaultAction)
