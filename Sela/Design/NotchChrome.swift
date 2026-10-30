@@ -1,31 +1,46 @@
 import SwiftUI
 
+enum SelaPanel: Int, CaseIterable {
+    case timer = 0
+    case battery
+    case music
+    case calendar
+    case shelf
+}
+
 struct SelaNavigation: View {
     @ObservedObject var selection: NotchPanelSelection
     @Namespace private var indicator
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    private let tabs = [("Timer", "timer"), ("Baterai", "battery.100"), ("Music", "music.note"), ("Shelf", "tray") ]
+    private let tabs: [(SelaPanel, String, String)] = [
+        (.timer, "Timer", "timer"),
+        (.battery, "Baterai", "battery.100"),
+        (.music, "Music", "music.note"),
+        (.calendar, "Calendar", "calendar"),
+        (.shelf, "Shelf", "tray"),
+    ]
     var body: some View {
         HStack(spacing: 4) {
             Text("sela").font(.system(size: 13, weight: .semibold)).tracking(1).selaSecondary()
             Spacer()
             ForEach(tabs.indices, id: \.self) { index in
-                Button { withAnimation(reduceMotion ? SelaTheme.fade : SelaTheme.spring) { selection.select(index) } } label: {
+                let tab = tabs[index]
+                Button { withAnimation(reduceMotion ? SelaTheme.fade : SelaTheme.spring) { selection.select(tab.0.rawValue) } } label: {
                     HStack(spacing: 6) {
-                        Image(systemName: tabs[index].1)
-                        if selection.index == index { Text(tabs[index].0) }
+                        Image(systemName: tab.2)
+                        if selection.index == tab.0.rawValue { Text(tab.1) }
                     }
                     .font(.system(size: 11, weight: .medium))
                     .frame(minWidth: 28, minHeight: 28).padding(.horizontal, 8)
                     .background {
-                        if selection.index == index {
+                        if selection.index == tab.0.rawValue {
                             RoundedRectangle(cornerRadius: 10).fill(SelaTheme.raised)
                                 .matchedGeometryEffect(id: "tab", in: indicator)
                         }
                     }
                     .contentShape(RoundedRectangle(cornerRadius: 10))
-                }.buttonStyle(.plain).help(tabs[index].0).accessibilityLabel(tabs[index].0)
-                    .accessibilityAddTraits(selection.index == index ? .isSelected : [])
+                }.buttonStyle(.plain).help(tab.1).accessibilityLabel(tab.1)
+                    .accessibilityAddTraits(selection.index == tab.0.rawValue ? .isSelected : [])
             }
         }.foregroundStyle(SelaTheme.ivory)
     }

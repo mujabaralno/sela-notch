@@ -2,7 +2,7 @@
 
 Aplikasi macOS untuk menampilkan panel di area notch menggunakan
 [DynamicNotchKit](https://github.com/MrKai77/DynamicNotchKit), lengkap dengan
-Timer & Pomodoro.
+Timer & Pomodoro, Music, Baterai, Kalender, dan File Shelf.
 
 ## Prasyarat
 
@@ -59,6 +59,27 @@ dengan `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` di depannya.
 - Aturan pemberitahuan berada di `BatteryAlertPolicy` (tanpa AppKit) sehingga dapat
   diuji dengan data contoh: `bash Tests/run-battery-tests.sh`.
 
+## Kalender & meeting
+
+- Tab **Calendar** membaca kalender yang sudah terhubung di aplikasi Calendar
+  melalui EventKit. Sela tidak membuat, mengubah, atau menghapus acara.
+- Akses hanya diminta saat pengguna menekan **Allow Calendar Access**; membuka tab,
+  refresh berkala, dan startup tidak memunculkan permintaan izin.
+- Agenda menampilkan acara yang sedang berlangsung dan tujuh hari ke depan,
+  berurutan acara berwaktu lalu acara sepanjang hari. Acara yang sudah berakhir,
+  dibatalkan, atau ditolak pengguna tidak ditampilkan.
+- Setiap acara menampilkan judul, tanggal, jam, dan lokasi bila tersedia.
+  Tautan Google Meet, Zoom, Microsoft Teams, Webex, Whereby, atau Jitsi mendapat
+  tombol **Join meeting**; tautan web biasa mendapat **Open event link**. Tautan
+  hanya dibuka setelah tombol ditekan.
+- Agenda diperbarui saat tab dibuka, saat kalender berubah, saat aplikasi aktif
+  kembali, tiap 60 detik, dan lewat tombol refresh. Hasil query lama diabaikan
+  dan agenda dibersihkan ketika izin dicabut.
+- Tanggapan akses berada di `Sela/Calendar`; data agenda hanya di memori, tanpa
+  log, disk, atau jaringan. Query EventKit berjalan di actor terpisah dan tidak
+  membawa objek `EKEvent` keluar actor.
+- Tes memakai provider dan acara sintetis: `bash Tests/run-calendar-tests.sh`.
+
 ## Interaksi notch
 
 - Mengarahkan kursor ke area kamera/notch membuka panel tanpa klik.
@@ -99,6 +120,10 @@ Sela/
   BatteryModel.swift          status baterai dan pemantauan sumber daya
   BatteryAlertPolicy.swift    aturan pemberitahuan charger dan baterai rendah
   BatteryPanel.swift          tampilan panel baterai
+  Calendar/CalendarModels.swift    agenda, filter, dan deteksi tautan meeting
+  Calendar/CalendarService.swift   status akses dan pembaruan agenda
+  Calendar/EventKitCalendarProvider.swift  provider EventKit read-only
+  Calendar/CalendarPanel.swift     tampilan agenda dan tautan acara
   TimerModel.swift            status dan hitung mundur sesi fokus/istirahat
   TimerPanel.swift            tampilan panel timer
   CompactTimerLabel.swift     teks tampilan ringkas notch (waktu atau pemberitahuan)
@@ -119,6 +144,9 @@ public/pet-pomodoro/          aset pet (pet.json + spritesheet), ikut ke bundle
   ulang notch.
 - Notifikasi baterai membuka notch selama beberapa detik dengan `BatteryAlertBanner`
   di atas panel aktif; `BatteryModel` menerbitkan `alert` yang dikonsumsi controller.
+- Tab Calendar memakai `CalendarService` dengan provider EventKit read-only. Query
+  berjalan di actor, sementara service mengatur status izin, refresh, dan snapshot
+  agenda yang aman dipakai SwiftUI.
 - Aksi tombol memanggil API async bawaan library: `expand()`, `compact()`, dan `hide()`.
 - `NotchHoverMonitor` memantau posisi kursor tiap 80 ms, sedangkan
   `InteractionAreaReporter` melaporkan area panel yang benar-benar dirender agar

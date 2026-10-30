@@ -15,6 +15,7 @@ final class NotchController: ObservableObject {
     let shelf = ShelfService()
     private var dragObservation = ShelfDragObservation()
     let music = MusicService(provider: MediaRemoteMusicProvider())
+    let calendar = CalendarService(provider: EventKitCalendarProvider())
     let timer = TimerModel()
     let battery = BatteryModel()
     let selection = NotchPanelSelection()
@@ -32,7 +33,8 @@ final class NotchController: ObservableObject {
                 timer: self.timer,
                 battery: self.battery,
                 music: self.music,
-                shelf: self.shelf
+                shelf: self.shelf,
+                calendar: self.calendar
             )
             .reportsInteractionArea { self.updatePanelRect($0) }
         )
@@ -59,12 +61,22 @@ final class NotchController: ObservableObject {
         }
         hoverMonitor.start()
         music.start()
+        calendar.start()
         shelf.$items.sink { [weak self] _ in
             Task { @MainActor in self?.refreshCompact() }
         }.store(in: &cancellables)
         NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)
             .sink { [weak self] _ in
-                MainActor.assumeIsolated { self?.music.stop() }
+                MainActor.assumeIsolated {
+                    self?.music.stop()
+                    self?.calendar.stop()
+                }
+            }.store(in: &cancellables)
+        selection.$index
+            .removeDuplicates()
+            .sink { [weak self] index in
+                guard index == SelaPanel.calendar.rawValue else { return }
+                Task { @MainActor in await self?.calendar.refresh() }
             }.store(in: &cancellables)
         music.$snapshot.sink { [weak self] _ in
             Task { @MainActor in self?.refreshCompact() }
@@ -115,7 +127,7 @@ final class NotchController: ObservableObject {
                 await notch.expand(on: screen)
             } else {
                 await notch.hide()
-                floatingPanel.show(content: AnyView(NotchExpandedContent(selection: selection, timer: timer, battery: battery, music: music, shelf: shelf)
+                floatingPanel.show(content: AnyView(NotchExpandedContent(selection: selection, timer: timer, battery: battery, music: music, shelf: shelf, calendar: calendar)
                     .clipShape(RoundedRectangle(cornerRadius: SelaTheme.radius))), screen: screen)
                 panelRect = floatingPanel.frame
             }
@@ -182,10 +194,10 @@ final class NotchController: ObservableObject {
         guard !isTransitioning else { return }
 
         let inActivation = Self.activationRect.contains(point)
-        let inPanel = notch.isHovering || panelRect.insetBy(dx: -12, dy: -12).contains(point)
+        let inPanel = isExpanded && (notch.isHovering || panelRect.insetBy(dx: -12, dy: -12).contains(point))
 
         if shelf.externalDrag && !shelf.outgoingDrag && (inActivation || inPanel) {
-            selection.index = 3
+            selection.index = SelaPanel.shelf.rawValue
             expand()
             enteredSinceOpen = true
             leaveDate = nil
@@ -205,7 +217,7 @@ final class NotchController: ObservableObject {
 
                 if Date().timeIntervalSince(enteredAt) >= Self.openDwell {
                     if music.isPlaying && !timer.showsCompactTime && battery.alert == nil {
-                        selection.index = 2
+                        selection.index = SelaPanel.music.rawValue
                     } else { selection.index = selection.manualIndex }
                     expand()
                 }
@@ -269,15 +281,35 @@ final class NotchController: ObservableObject {
     private static var activationRect: CGRect {
         guard let screen = NSScreen.screens.first(where: { $0.frame.contains(NSEvent.mouseLocation) }) ?? NSScreen.main ?? NSScreen.screens.first else { return .null }
 
+        if let housing = cameraHousingRect(for: screen) {
+            return housing
+        }
+
         let menuBarHeight = screen.frame.maxY - screen.visibleFrame.maxY
-        let height = menuBarHeight + 6
-        let width: CGFloat = 220
+        let width: CGFloat = 156
 
         return CGRect(
             x: screen.frame.midX - width / 2,
-            y: screen.frame.maxY - height,
+            y: screen.frame.maxY - menuBarHeight,
             width: width,
-            height: height
+            height: menuBarHeight
+        )
+    }
+
+    private static func cameraHousingRect(for screen: NSScreen) -> CGRect? {
+        guard screen.safeAreaInsets.top > 0,
+              let left = screen.auxiliaryTopLeftArea,
+              let right = screen.auxiliaryTopRightArea
+        else { return nil }
+
+        let width = screen.frame.width - left.width - right.width
+        guard width > 0 else { return nil }
+
+        return CGRect(
+            x: screen.frame.midX - width / 2,
+            y: screen.frame.maxY - screen.safeAreaInsets.top,
+            width: width,
+            height: screen.safeAreaInsets.top
         )
     }
 }
@@ -298,6 +330,7 @@ struct NotchExpandedContent: View {
     let battery: BatteryModel
     let music: MusicService
     @ObservedObject var shelf: ShelfService
+    let calendar: CalendarService
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
@@ -305,21 +338,31 @@ struct NotchExpandedContent: View {
             content.frame(width: SelaTheme.width, height: contentHeight, alignment: .top)
         }
             .onChange(of: shelf.targeted) { targeted in
-                if targeted && !shelf.outgoingDrag { selection.index = 3 }
+                if targeted && !shelf.outgoingDrag { selection.index = SelaPanel.shelf.rawValue }
             }
             .frame(width: SelaTheme.width, height: contentHeight)
     }
     private var contentHeight: CGFloat {
-        selection.index == 3 ? ShelfLayout.panelHeight(itemCount: shelf.items.count, hasMessage: shelf.message != nil) : 188
+        switch SelaPanel(rawValue: selection.index) {
+        case .shelf:
+            ShelfLayout.panelHeight(itemCount: shelf.items.count, hasMessage: shelf.message != nil)
+        case .calendar:
+            CalendarLayout.contentHeight
+        default:
+            188
+        }
     }
     private var content: some View {
         VStack(spacing: 12) {
             SelaNavigation(selection: selection).disabled(shelf.isBusy).modifier(SelaArrival())
             Group {
-                if selection.index == 3 { ShelfPanel(shelf: shelf) }
-                else if selection.index == 2 { MusicPanel(music: music) }
-                else if selection.index == 0 { TimerPanel(timer: timer) }
-                else { BatteryPanel(battery: battery) }
+                switch SelaPanel(rawValue: selection.index) {
+                case .shelf: ShelfPanel(shelf: shelf)
+                case .calendar: CalendarPanel(calendar: calendar)
+                case .music: MusicPanel(music: music)
+                case .timer: TimerPanel(timer: timer)
+                case .battery, .none: BatteryPanel(battery: battery)
+                }
             }
             .modifier(SelaArrival(delay: 0.06))
             .id(selection.index)

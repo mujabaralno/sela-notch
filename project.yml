@@ -38,6 +38,8 @@ targets:
         LSApplicationCategoryType: public.app-category.utilities
         LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
         NSHumanReadableCopyright: ""
+        NSCalendarsUsageDescription: Sela membaca kalender di Mac untuk menampilkan agenda tujuh hari dan tautan meeting. Sela tidak membuat, mengubah, atau menghapus acara.
+        NSCalendarsFullAccessUsageDescription: Sela membaca kalender di Mac untuk menampilkan agenda tujuh hari dan tautan meeting. Sela tidak membuat, mengubah, atau menghapus acara.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mujabaralno.sela

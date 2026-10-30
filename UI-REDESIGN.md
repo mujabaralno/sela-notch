@@ -67,3 +67,67 @@ fullscreen/Spaces, perpindahan kursor kamera→panel, VoiceOver, pengaturan Redu
 Motion/Increase Contrast sistem, dan semua preview di canvas Xcode. Build preview
 bukan bukti semua state sudah dirender di canvas. Playback lintas aplikasi tetap
 mengikuti batas pengujian sebelumnya; tidak diuji ulang oleh redesain ini.
+
+
+## Refinement · 29 October 2026
+
+Presentation-only refinement of the existing Sela target. Audit found shifting tab
+widths, heavy secondary buttons, competing control surfaces and inconsistent
+feature hierarchy. The existing SwiftUI faces remain connected to the same
+callbacks; timer, battery, MediaRemote, Shelf storage, hover tracking, activity
+priority and drag/drop services are unchanged.
+
+- Stable four-tab navigation always exposes both SF Symbol and label. Existing
+  indices are preserved. No unimplemented features are added.
+- Pure black notch, warm ivory text, near-black controls, system typography.
+  Secondary controls use quiet backgrounds; primary actions retain clear fill.
+- Expanded content is 408 × 216 pt for Timer, Music and Battery. The 32 pt tab
+  bar, 16 pt spacing and 136 pt activity region share a common rhythm.
+- Timer uses a 116 pt ring, tabular time and grouped session choices. Existing
+  companion, start/pause/reset and end-of-session actions remain available.
+- Music uses 84 pt artwork, a 44 pt primary transport button, quiet adjacent
+  controls and a separated source/status row. Unsupported controls remain
+  disabled using the same capabilities and session token.
+- Battery uses a larger tabular percentage, thin charge track and a compact
+  settings row. The existing alerts binding and fixed threshold are preserved.
+- Shelf retains 56 pt full-width rows, a 28 pt remove target and at most three
+  visible rows before scrolling. Empty state is shorter; height follows content.
+- Companion window separates the black notch preview from its warm surface.
+- Reduce Motion retains fade-only interaction feedback. Increase Contrast raises
+  secondary/tab contrast and adds control outlines. Existing VoiceOver labels
+  are retained; transport labels are localized.
+
+Verification: Xcode Sela build passed. Synthetic Music service/transport guard,
+battery policy, Shelf service and AppKit destination tests passed. The AppKit
+Shelf test requires pasteboard access outside the sandbox and emits the existing
+sandbox-extension diagnostic for synthetic file URLs; assertions pass. Four
+feature faces rendered with synthetic data and were visually inspected. SwiftUI
+previews cover idle/compact/expanded, timer focus/rest/paused/alarm, music
+playing/paused/empty/unavailable/limited controls, and battery charging/low/unknown.
+No private playback commands were sent. Running Sela was not restarted, preserving
+its in-memory Shelf. Real notch hover, Finder dragging, fullscreen/multi-display,
+VoiceOver and OS accessibility preference changes still need manual verification.
+
+## Calendar · 30 October 2026
+
+The Calendar feature is now implemented, so the previously absent tab is added as
+the fifth navigation item (Timer, Baterai, Music, Calendar, Shelf). Existing Shelf
+indices move with it; drag-to-Shelf still selects the Shelf tab without changing the
+user's manual tab choice.
+
+- EventKit access is read-only. `CalendarService` checks authorization status without
+  prompting; `requestFullAccessToEvents` (macOS 14+) or `requestAccess(to: .event)`
+  (macOS 13) runs only from the Allow Calendar Access button.
+- EventKit queries run in `EventKitCalendarProvider` actor. Only value snapshots leave
+  the actor; notes are parsed for meeting links and never retained.
+- The panel shows seven days of ongoing/upcoming events, timed before all-day, with
+  clear Berlangsung/Mendatang/Sepanjang hari labels, location, and Join meeting or
+  Open event link buttons. Denied, restricted, empty, loading, and failed states are
+  explicit; Refresh remains available.
+- Agenda refreshes on tab open, EventKit changes, app activation, every 60 seconds,
+  and manual refresh. Stale query results are discarded and revoked access clears the
+  in-memory agenda.
+- Calendar content uses the existing 408 pt surface, 12 pt control radius, typography,
+  and quiet secondary controls. Its height is 264 pt to fit the scrolling agenda.
+- Synthetic provider and agenda/link tests cover the feature. Real permission dialogs
+  and personal calendar data were not used and remain manual verification.
